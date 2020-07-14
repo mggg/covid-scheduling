@@ -10,12 +10,15 @@ class ScheduleSampler:
 
     def sample(self, n):
         size = self.n_days * self.n_blocks
-        sampled = np.zeros((n, size), dtype=np.int)
-        cohort_data = list(self.cohorts.values())
-        cohort_weights = np.array([c['weight'] for c in cohort_data])
+        sampled_schedules = np.zeros((n, size), dtype=np.int)
+        sampled_cohorts = []
+        cohort_keys = list(self.cohorts.keys())
+        cohort_weights = np.array([self.cohorts[c]['weight']
+                                   for c in cohort_keys])
         cohort_probs = cohort_weights / cohort_weights.sum()
         for i in range(n):
-            cohort = np.random.choice(cohort_data, p=cohort_probs)
+            cohort_key = np.random.choice(cohort_keys, p=cohort_probs)
+            cohort = self.cohorts[cohort_key]
             # Assemble daily schedule.
             if 'schedules' in cohort:
                 schedules = list(cohort['schedules'].keys())
@@ -31,8 +34,9 @@ class ScheduleSampler:
                 if on == '1':
                     for block in range(self.n_blocks):
                         if np.random.random() < cohort['blocks'][block]:
-                            sampled[i, day * self.n_blocks + block] = 1
-        return sampled
+                            sampled_schedules[i, day * self.n_blocks + block] = 1
+            sampled_cohorts.append(cohort_key)
+        return sampled_schedules, sampled_cohorts
 
 
 def _validate_cohorts(cohorts, n_days, n_blocks):
