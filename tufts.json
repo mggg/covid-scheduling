@@ -1,0 +1,33 @@
+{
+    "university": "Tufts University",
+    "campuses": [
+        {
+            "name": "Medford/Somerville",
+            "policy": {
+                "n_days": 7,
+                "n_blocks": 3,
+                "min_block_distance": 3,
+                "test_interval_days": 3.5,
+                "load_tolerance": 0.1,
+                "start_time": "2020-08-17T0:00:00Z"
+            },
+            "sites": [
+                {
+                    "name": "Gantcher Center",
+                    "n_lines": 20,
+                    "availability": [
+                        {"day": "Monday", "open": "08:00:00", "close": "20:00:00"}
+                    ]
+                },
+                {
+                    "name": "Sophia Gordon Hall",
+                    "n_lines": 10,
+                    "availability": [
+                    ]
+                }
+            ],
+            "cohorts": [
+            ]
+        }
+    ]
+}
