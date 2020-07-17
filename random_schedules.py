@@ -2,17 +2,20 @@ import json
 import click
 import random
 import string
+import datetime
 import numpy as np
+from dateutil.parser import parse as ts_parse
+from itertools import permutations
 from schedules import ScheduleSampler
 
 n_days = 7
 n_blocks = 3
-day_order = ('Monday', 'Tuesday', 'Wednesday', 'Thursday',
-             'Friday', 'Saturday', 'Sunday')
-site_rankings = {
-    ('Gantcher Center', 'Sophia Gordon Hall'): 0.75,
-    ('Sophia Gordon Hall', 'Gantcher Center'): 0.25
-}
+start_date = ts_parse('2020-08-17')
+sites = ('51 Winthrop', 'Jackson Gym', 'Curtis Hall')
+block_names = ('Morning', 'Afternoon', 'Evening')
+campus = 'Medford/Somerville'
+site_rankings = {p: 1/6 for p in permutations(sites)}
+
 
 sampler = ScheduleSampler(
     cohorts={
@@ -59,17 +62,28 @@ def main(out_file, n_people, seed):
         schedule = [int(s) for s in schedule]
         rank_idx = np.random.choice(range(len(site_rankings)),
                                     p=list(site_rankings.values()))
+
+        day_schedule = {}
+        for day in range(n_days):
+            day_delta = datetime.timedelta(days=day)
+            ts = (start_date + day_delta).strftime('%Y-%m-%d')
+            blocks_on = schedule[n_blocks * day:n_blocks * (day + 1)]
+            day_blocks = [block_names[idx]
+                          for idx, on in enumerate(blocks_on)
+                          if on == 1]
+            if day_blocks:
+                day_schedule[ts] = day_blocks
+
         rows.append({
             'id': ''.join(random.choice(string.ascii_lowercase +
                                         string.ascii_uppercase)
                           for _ in range(10)),
+            'campus': campus,
             'cohort': cohort,
-            'schedule': {
-                day: schedule[n_blocks * idx:n_blocks * (idx + 1)]
-                for idx, day in enumerate(day_order)
-            },
+            'schedule': day_schedule,
             'site_rank': list(site_rankings.keys())[rank_idx]
         })
+
     with open(out_file, 'w') as f:
         json.dump(rows, f)
 
