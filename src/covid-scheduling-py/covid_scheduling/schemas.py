@@ -51,7 +51,7 @@ CONFIG_SCHEMA = Schema({
                     }
                 }
             },
-            'bounds': {
+            Optional('bounds'): {
                 Or('day_load_tolerance', 'block_load_tolerance'): {
                     'max':
                     And(Or(int, float),
@@ -122,12 +122,14 @@ def validate_config(config: Dict) -> Dict:
     #  * All times should be `datetime` objects.
     for campus in config.values():
         for cohort in campus['policy']['cohorts'].values():
-            if 'min' not in cohort:
-                cohort['min'] = 0
-            if cohort['min'] > cohort['target']:
+            # TODO: Site ranking costs.
+            interval = cohort['interval']
+            if 'min' not in interval:
+                interval['min'] = 0
+            if interval['min'] > interval['target']:
                 raise SchemaError('Cohorts: min interval cannot be greater'
                                   'than target interval.')
-            if 'max' in cohort and cohort['max'] < cohort['target']:
+            if 'max' in interval and interval['max'] < interval['target']:
                 raise SchemaError('Cohorts: max interval cannot be less'
                                   'than target interval.')
 
@@ -138,7 +140,7 @@ def validate_config(config: Dict) -> Dict:
                 raise SchemaError('Blocks: start time cannot be after'
                                   'end time.')
 
-        for site in campus['policy']['sites'].values():
+        for site in campus['sites'].values():
             for block in site['hours']:
                 block['start'] = ts_parse(block['start'])
                 block['end'] = ts_parse(block['end'])
@@ -175,8 +177,8 @@ def validate_people(people: List, config: Dict) -> Dict:
     # Additional checks and conversions:
     # * `campus` must exist in the config.
     # * `cohort` must exist in the config (for `campus`).
-    # * All sites in `site_ranks` must exist in the config.
-    # * All sites in `site_ranks` must be unique.
+    # * All sites in `site_rank` must exist in the config.
+    # * All sites in `site_rank` must be unique.
     # * All schedule blocks in `schedule` members must exist in the config.
     # * All schedule blocks in `schedule` members must be unique.
     # * All schedule blocks in `last_test` members must exist in the config.
@@ -188,12 +190,12 @@ def validate_people(people: List, config: Dict) -> Dict:
                               'in the configuration.')
         campus_config = config[person['campus']]
         cohort = person['cohort']
-        if cohort not in campus_config['cohorts']:
+        if cohort not in campus_config['policy']['cohorts']:
             raise SchemaError(f'People: cohort "{cohort}" does not exist'
                               f'in the configuration for campus "{campus}".')
 
         sites = campus_config['sites'].keys()
-        ranks = person['site_ranks']
+        ranks = person['site_rank']
         for site in ranks:
             if site not in sites:
                 raise SchemaError(f'People: site "{site}" does not exist in'
@@ -201,7 +203,7 @@ def validate_people(people: List, config: Dict) -> Dict:
         if len(set(ranks)) != len(ranks):
             raise SchemaError('People: sites in ranking must be unique.')
 
-        campus_blocks = campus_config['blocks'].keys()
+        campus_blocks = campus_config['policy']['blocks'].keys()
         date_schedule = {}
         for date, blocks in person['schedule'].items():
             for block in blocks:
