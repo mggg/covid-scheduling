@@ -81,3 +81,5 @@ def handle_invalid_usage(error):
     response.status_code = error.status_code
     return response
 
+if __name__ == '__main__':
+    app.run(threaded=True, port=5000)
