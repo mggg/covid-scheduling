@@ -5,9 +5,9 @@ from covid_scheduling import (
 )
 
 if __name__ == '__main__':
-    with open('../../tufts.json') as f:
+    with open('data/tufts.json') as f:
         config = validate_config(json.load(f)['campuses'])
-    with open('../../tufts_sample_5000.json') as f:
+    with open('data/tufts_sample_5000.json') as f:
         people = validate_people(json.load(f), config)
     print(bipartite_assign(config['Medford/Somerville'],
                            people[:300],
