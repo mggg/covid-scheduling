@@ -2,11 +2,11 @@
 from datetime import datetime
 from flask import Flask, jsonify, request
 from schema import SchemaError
-from covid_scheduling import (
-    validate_people, validate_config, bipartite_assign, AssignmentError
-)
+from covid_scheduling import (validate_people, validate_config,
+                              assign_schedules, AssignmentError)
 
 app = Flask(__name__)
+
 
 @app.route('/', methods=['POST'])
 def schedule():
@@ -41,19 +41,12 @@ def schedule():
         raise InvalidUsage('Could not validate people.',
                            payload={'fields': ex.autos})
 
-    # Assign people at each campus individually.
-    assignments = []
-    for campus, campus_config in config.items():
-        campus_people = [p for p in people if p['campus'] == campus]
-        try:
-            assignments += bipartite_assign(campus_config,
-                                            campus_people,
-                                            start_date,
-                                            end_date)
-        except AssignmentError as ex:
-            raise InvalidUsage(f'Assignment error: {ex.message}', 500)
-        except Exception as ex:
-            raise InvalidUsage('Unknown assignment error.', 500)
+    try:
+        assignments = assign_schedules(config, people, start_date, end_date)
+    except AssignmentError as ex:
+        raise InvalidUsage(f'Assignment error: {ex.message}', 500)
+    except Exception as ex:
+        raise InvalidUsage('Unknown assignment error.', 500)
     return jsonify({'people': assignments})
 
 
@@ -74,12 +67,14 @@ class InvalidUsage(Exception):
         rv['error'] = self.message
         return rv
 
+
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
     """Handler for assignment failures."""
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
 
 if __name__ == '__main__':
     app.run(threaded=True, port=5000)

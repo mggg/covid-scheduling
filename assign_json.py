@@ -3,9 +3,8 @@ import click
 import random
 import numpy as np
 from dateutil.parser import parse as ts_parse
-from covid_scheduling import (
-    validate_config, validate_people, bipartite_assign, AssignmentError
-)
+from covid_scheduling import (validate_config, validate_people,
+                              assign_schedules, AssignmentError)
 
 
 @click.command()
@@ -28,13 +27,7 @@ def main(config_file, people_file, out_file, start_date, end_date, seed):
     config = validate_config(config_raw['campuses'])
     people = validate_people(people_raw, config)
 
-    assignments = []
-    for campus, campus_config in config.items():
-        campus_people = [p for p in people if p['campus'] == campus]
-        assignments += bipartite_assign(campus_config,
-                                        campus_people,
-                                        start_ts,
-                                        end_ts)
+    assignments = assign_schedules(config, people, start_ts, end_ts)
     with open(out_file, 'w') as f:
         json.dump({'people': assignments}, f)
 
