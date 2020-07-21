@@ -10,7 +10,7 @@ from .load_balancing import site_weights
 def bipartite_assign(config: Dict, people: List, start_date: datetime,
                      end_date: datetime, schedules: List,
                      schedules_by_cohort: Dict, test_demand: np.ndarray,
-                     cost_fn: Callable) -> Dict:
+                     cost_fn: Callable) -> Tuple[Dict, List]:
     """Assigns people to schedules using bipartite maching."""
     # Formulate IP minimum-cost matching problem.
     solver = pywraplp.Solver('SolveAssignmentProblem',
@@ -46,13 +46,40 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
 
     status = solver.Solve()
     if status == pywraplp.Solver.OPTIMAL:
-        return condense_assignments(people, schedules, assignments)
+        condensed = condense_assignments(people, schedules, assignments)
+        stats = assignment_stats(people, schedules, test_demand, costs, condensed)
+        return condensed, stats
     if status == pywraplp.Solver.FEASIBLE:
         raise AssignmentError('Could not generate assignments: '
                               'solution is not optimal.')
     raise AssignmentError('Could not generate assignments: problem is '
                           f'infeasible or unbounded (status code {status}).')
 
+
+def assignment_stats(people: List,
+                     schedules: Dict,
+                     test_demand: np.ndarray,
+                     costs: np.ndarray,
+                     assignment: Dict) -> List:
+    """Computes basic statistics about the assignment."""
+    stats = []
+    for p_idx, s_idx in assignment.items():
+        if s_idx is None:
+            stats.append({})
+            continue
+        min_cost = np.min(costs[p_idx][costs[p_idx] >= 0])
+        actual_cost = costs[p_idx, s_idx]
+        site = schedules[s_idx][0]['site']
+        # JSON serialization doesn't like NumPy types.
+        stats.append({
+            'min_cost': float(min_cost),
+            'actual_cost': float(actual_cost),
+            'cost_optimal': bool(abs(min_cost - actual_cost) < 1e-10),
+            'site_rank': people[p_idx]['site_rank'].index(site),
+            'test_demand': int(test_demand[p_idx]),
+            'test_supply': len(schedules[s_idx])
+        })
+    return stats
 
 def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                     schedules: Dict, schedules_by_cohort: Dict,

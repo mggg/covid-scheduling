@@ -42,12 +42,12 @@ def schedule():
                            payload={'fields': ex.autos})
 
     try:
-        assignments = assign_schedules(config, people, start_date, end_date)
+        assignments, stats = assign_schedules(config, people, start_date, end_date)
     except AssignmentError as ex:
         raise InvalidUsage(f'Assignment error: {ex.message}', 500)
     except Exception as ex:
         raise InvalidUsage('Unknown assignment error.', 500)
-    return jsonify({'people': assignments})
+    return jsonify({'people': assignments, 'stats': stats})
 
 
 # Error handling template from

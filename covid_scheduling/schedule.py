@@ -33,7 +33,7 @@ def assign_schedules(config: Dict,
                      people: List,
                      start_date: datetime,
                      end_date: datetime,
-                     method: str = 'bipartite') -> Dict:
+                     method: str = 'bipartite') -> Tuple[Dict, List]:
     """Assigns people to testing schedules.
 
     :param config: A validated university-level configuration.
@@ -55,6 +55,7 @@ def assign_schedules(config: Dict,
 
     # Generate assignments for each campus individually.
     assignments = []
+    all_stats = []
     for campus, campus_config in config.items():
         # Enumerate schedules by cohort.
         # We assume that each person demands at least one test, regardless
@@ -85,16 +86,17 @@ def assign_schedules(config: Dict,
             raise AssignmentError(f'Assignment method "{method}" '
                                   'not available.')
 
-        condensed = assign_fn(config=campus_config,
-                              people=campus_people,
-                              start_date=start_date,
-                              end_date=end_date,
-                              schedules=schedules,
-                              schedules_by_cohort=schedules_by_cohort,
-                              test_demand=demand,
-                              cost_fn=schedule_cost)
+        condensed, stats = assign_fn(config=campus_config,
+                                     people=campus_people,
+                                     start_date=start_date,
+                                     end_date=end_date,
+                                     schedules=schedules,
+                                     schedules_by_cohort=schedules_by_cohort,
+                                     test_demand=demand,
+                                     cost_fn=schedule_cost)
         assignments += format_assignments(people, schedules, condensed)
-    return assignments
+        all_stats += stats
+    return assignments, all_stats
 
 
 def format_assignments(people: List, schedules: Dict,

@@ -27,7 +27,7 @@ def main(config_file, people_file, out_file, start_date, end_date, seed):
     config = validate_config(config_raw['campuses'])
     people = validate_people(people_raw, config)
 
-    assignments = assign_schedules(config, people, start_ts, end_ts)
+    assignments, _ = assign_schedules(config, people, start_ts, end_ts)
     with open(out_file, 'w') as f:
         json.dump({'people': assignments}, f)
 
