@@ -8,6 +8,7 @@ from itertools import combinations, product
 import numpy as np
 from ortools.linear_solver import pywraplp
 from .schemas import DAYS
+from .errors import AssignmentError
 
 MAX_DAYS = 14
 MAX_TESTS = 2
@@ -58,13 +59,20 @@ def cohort_schedules(config: Dict,
     return schedules
 
 
-def add_sites(schedules: List[Dict], config: Dict):
+def add_sites_to_schedules(schedules: List[Dict], config: Dict):
     """Augments a list of schedules with site permutations."""
     site_schedules = []
     sites = config['sites'].keys()
     default_day = {'year': 2020, 'month': 9, 'day': 1}
+    allow_splits = config.get('bounds', {}).get('allow_site_splits', False)
     for schedule in schedules:
-        for site_perm in product(sites, repeat=len(schedule)):
+        if allow_splits:
+            # 💥 Warning: allowing schedules with multiple appointments
+            # to split across sites may result in combinatorial explosion.
+            site_iter = product(sites, repeat=len(schedule))
+        else:
+            site_iter = [[site] * len(schedule) for site in sites]
+        for site_perm in site_iter:
             augmented = []
             perm_valid = True
             for site, block in zip(site_perm, schedule):
@@ -107,19 +115,21 @@ def schedule_cost(schedule: List[Dict], person: Dict, target_interval: float):
     return cost
 
 
-def block_weights(config: Dict,
-                  start_date: datetime,
-                  end_date: datetime) -> np.ndarray:
+def site_weights(config: Dict,
+                 start_date: datetime,
+                 end_date: datetime,
+                 use_days: bool = False) -> np.ndarray:
     """Determines load-balanced supply for each site-block over a week."""
     n_days = (end_date - start_date).days + 1
-    blocks = sorted(config['policy']['blocks'].values(), key=lambda k: k['start'])
+    blocks = sorted(config['policy']['blocks'].values(),
+                    key=lambda k: k['start'])
     sites = config['sites']
-    day_w = np.zeros(len(DAYS) * len(sites))
-    block_w = np.zeros(len(DAYS) * len(blocks) * len(sites))
-    site_day_ids = {}
-    site_day_id = 0
-    site_block_ids = {}
-    site_block_id = 0
+    n_units = len(DAYS)
+    if not use_days:
+        n_units *= len(blocks)
+    weights = np.zeros(len(sites) * n_units)
+    site_time_id = 0
+    site_time_ids = {}
     for site_idx, site in enumerate(sites):
         for day_idx in range(n_days):
             for block_idx, block in enumerate(blocks):
@@ -136,19 +146,15 @@ def block_weights(config: Dict,
                     if delta_s > 0:
                         weighted_s = (delta_s * window['weight'] *
                                       sites[site]['n_lines'])
-                        day_w[site_day_id] += weighted_s
-                        block_w[site_block_id] += weighted_s
+                        weights[site_time_id] += weighted_s
                 start_d = block['start'] - block['start'].replace(**MIDNIGHT)
-                site_block_ids[(ts + start_d, site)] = site_block_id
-                site_block_id += 1
-            site_day_ids[(ts, site)] = site_day_id
-            site_day_id += 1
-    return {
-        'day_weights': day_w / day_w.sum(),
-        'block_weights': block_w / block_w.sum(),
-        'day_ids': site_day_ids,
-        'block_ids': site_block_ids
-    }
+                if not use_days:
+                    site_time_ids[(ts + start_d, site)] = site_time_id
+                    site_time_id += 1
+            if use_days:
+                site_time_ids[(ts, site)] = site_time_id
+                site_time_id += 1
+    return weights / weights.sum(), site_time_ids
 
 
 def bipartite_assign(config: Dict,
@@ -187,41 +193,55 @@ def bipartite_assign(config: Dict,
 
     blocks = schedule_blocks(config, start_date, end_date)
     schedules_by_cohort = {
-        co: add_sites(
+        co: add_sites_to_schedules(
             cohort_schedules(config, co, n_tests[co], blocks),
             config
         )
         for co in config['policy']['cohorts'].keys()
     }
+    schedules, schedules_by_cohort = schedule_ordering(schedules_by_cohort)
+    test_demand = testing_demand(config, people, n_tests)
 
-    # Assign an ordering to all unique schedules.
-    testing_ids = {}
-    testing_schedules = {}
-    testing_schedules_by_cohort = {}
-    testing_blocks = {}
-    testing_sites = {}
-    sched_id = 0
-    for cohort, schedules in schedules_by_cohort.items():
-        with_ids = []
-        for schedule in schedules:
-            uniq = []
-            for block in schedule:
-                block_hash = (block['start'], block['end'], block['site'])
-                uniq += list(block_hash)
-            uniq = tuple(uniq)
-            if uniq in testing_ids:
-                with_ids.append({'id': testing_ids[uniq], 'blocks': schedule})
-            else:
-                testing_ids[uniq] = sched_id
-                testing_schedules[sched_id] = schedule
-                testing_blocks[sched_id] = set((s['date'], s['block'])
-                                               for s in schedule)
-                testing_sites[sched_id] = set(s['site'] for s in schedule)
-                with_ids.append({'id': sched_id, 'blocks': schedule})
-                sched_id += 1
-        testing_schedules_by_cohort[cohort] = with_ids
+    # Formulate IP minimum-cost matching problem.
+    solver = pywraplp.Solver('SolveAssignmentProblem',
+                             pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
+    assignments, costs = add_assignments(solver, config, people, schedules,
+                                         schedules_by_cohort, test_demand)
 
+    # Add load-balancing constraints (optional).
+    if ('day_load_tolerance' in config['policy']['bounds'] or
+            'block_load_tolerance' in config['policy']['bounds']):
+        # Introduce an auxiliary vector to count schedule occurrences.
+        schedule_counts = add_schedule_counts(solver, assignments)
+        add_load_balancing(solver, config, people, schedules_by_cohort,
+                           schedule_counts, test_demand, start_date, end_date)
+
+    # Objective: minimize total matching cost.
+    solver.Minimize(solver.Sum([np.dot(a_row, c_row)
+                        for (a_row, c_row) in zip(assignments, costs)]))
+    status = solver.Solve()
+
+    if status == pywraplp.Solver.OPTIMAL:
+        condensed = condense_assignments(people, schedules,
+                                         assignments)
+        return format_assignments(people, schedules, condensed)
+    if status == pywraplp.Solver.FEASIBLE:
+        raise AssignmentError('Could not generate assignments: '
+                              'solution is not optimal.')
+    # TODO: are there other statuses?
+    raise AssignmentError('Could not generate assignments: '
+                          'problem is infeasible.')
+
+
+
+def add_assignments(solver, config, people, schedules, schedules_by_cohort,
+                    test_demand):
+    """Generates assignment and cost matrices."""
     # Cache compatibility sets.
+    testing_blocks = {idx: set((s['date'], s['block']) for s in sched)
+                      for idx, sched in schedules.items()}
+    testing_sites = {idx: set(s['site'] for s in sched)
+                      for idx, sched in schedules.items()}
     people_sites = [set(person['site_rank']) for person in people]
     people_blocks = []
     for person in people:
@@ -231,16 +251,15 @@ def bipartite_assign(config: Dict,
                 person_blocks.add((date, b))
         people_blocks.append(person_blocks)
 
-    # Formulate IP minimum-cost matching problem.
-    solver = pywraplp.Solver('SolveAssignmentProblem',
-                             pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
-    n_schedules = len(testing_ids)
-    costs = np.zeros((n_people, n_schedules))
+    # Generate assignment and cost matrices.
+    n_people = len(people)
+    n_schedules = len(schedules)
+    costs = -1 * np.ones((n_people, n_schedules))
     assignments = np.zeros((n_people, n_schedules), dtype=np.int).tolist()
     for p_idx, person in tqdm(enumerate(people)):
         cohort = person['cohort']
         n_matches = 0
-        for schedule in testing_schedules_by_cohort[cohort]:
+        for schedule in schedules_by_cohort[cohort]:
             # A person-schedule assignment variable is only created if
             # the person is compatible with a testing schedule. Thus,
             # the resulting `assignments` matrix is a mix of variables
@@ -257,7 +276,7 @@ def bipartite_assign(config: Dict,
             #  * There are no testing sites in the testing schedule
             #    that the person did not rank.
             s_idx = schedule['id']
-            if (len(schedule['blocks']) == n_tests[cohort] and
+            if (len(schedule['blocks']) == test_demand[s_idx] and
                     not testing_blocks[s_idx] - people_blocks[p_idx] and
                     not testing_sites[s_idx]  - people_sites[p_idx]):
                 assn = solver.IntVar(0, 1, f'assignments[{p_idx}, {s_idx}]')
@@ -274,40 +293,51 @@ def bipartite_assign(config: Dict,
         if n_matches > 0:
             solver.Add(solver.Sum(assignments[p_idx][j]
                                   for j in range(n_schedules)) == 1)
+    return assignments, costs
 
-    # Add load-balancing constraints (optional).
-    if ('day_load_tolerance' in config['policy']['bounds'] or
-            'block_load_tolerance' in config['policy']['bounds']):
-        # Build the binary site-block and site-day matrices.
-        weights = block_weights(config, start_date, end_date)
-        n_blocks_per_day = len(config['policy']['blocks'])
-        n_sites = len(config['sites'])
-        n_site_blocks = len(weights['block_ids'])
-        n_site_days = len(weights['day_ids'])
-        site_days = np.zeros((n_schedules, n_site_days), dtype=np.int)
-        site_blocks = np.zeros((n_schedules, n_site_blocks), dtype=np.int)
-        site_day_ids = weights['day_ids']
-        site_block_ids = weights['block_ids']
-        for cohort, schedules in testing_schedules_by_cohort.items():
-            for schedule in schedules:
-                sched_id = schedule['id']
-                for block in schedule['blocks']:
-                    block_hash = (block['start'], block['site'])
-                    day_hash = (block['date'], block['site'])
-                    site_days[sched_id, site_day_ids[day_hash]] = 1
-                    site_blocks[sched_id, site_block_ids[block_hash]] = 1
 
-        # Determine total testing demand.
-        cohort_counts = defaultdict(int)
-        test_demand = np.zeros(n_people, dtype=np.int)
-        for idx, person in enumerate(people):
-            cohort_counts[person['cohort']] += 1
-            test_demand[idx] = n_tests[person['cohort']]
-        total_demand = test_demand.sum()
-        print('total demand:', total_demand)
+def schedule_ordering(schedules_by_cohort):
+    """Assigns a canonical ordering to unique schedules across cohorts."""
+    schedule_ids = {}
+    schedules_by_id = {}
+    schedules_by_cohort_with_id = {}
+    sched_id = 0
+    for cohort, schedules in schedules_by_cohort.items():
+        with_ids = []
+        for schedule in schedules:
+            uniq = []
+            for block in schedule:
+                block_hash = (block['start'], block['end'], block['site'])
+                uniq += list(block_hash)
+            uniq = tuple(uniq)
+            if uniq in schedule_ids:
+                with_ids.append({'id': schedule_ids[uniq], 'blocks': schedule})
+            else:
+                schedule_ids[uniq] = sched_id
+                schedules_by_id[sched_id] = schedule
+                with_ids.append({'id': sched_id, 'blocks': schedule})
+                sched_id += 1
+        schedules_by_cohort_with_id[cohort] = with_ids
+    return schedules_by_id, schedules_by_cohort_with_id
 
-        # Introduce an auxiliary vector to count schedule occurrences.
-        schedule_counts = []
+
+def testing_demand(config, people, n_tests):
+    """Calculates testing demand for each person."""
+    cohort_counts = defaultdict(int)
+    n_people = len(people)
+    test_demand = np.zeros(n_people, dtype=np.int)
+    for idx, person in enumerate(people):
+        cohort_counts[person['cohort']] += 1
+        test_demand[idx] = n_tests[person['cohort']]
+    return test_demand
+
+
+def add_schedule_counts(solver, assignments: List[List]):
+    """Adds an auxiliary schedule counts vector to the MIP."""
+    schedule_counts = []
+    n_people = len(assignments)
+    n_schedules = len(assignments[0])
+    if assignments:
         for i in range(n_schedules):
             sched_count = solver.IntVar(0, n_people, f'count{i}')
             schedule_counts.append(sched_count)
@@ -316,79 +346,92 @@ def bipartite_assign(config: Dict,
                     assignments[j][i] for j in range(n_people)
                 )
             )
-
-        # Constraint: site-blocks are sufficiently load-balanced.
-        if 'block_load_tolerance' in config['policy']['bounds']:
-            block_load_tol = (config['policy']['bounds']
-                              ['block_load_tolerance']['max'])
-            target_block_load = total_demand * weights['block_weights']
-            min_block_load = (1 - block_load_tol) * target_block_load
-            max_block_load = (1 + block_load_tol) * target_block_load
-            for sb_idx in range(n_site_blocks):
-                sb_demand = solver.Sum(
-                    site_blocks[i, sb_idx] * schedule_counts[i]
-                    for i in range(n_schedules)
-                )
-                solver.Add(sb_demand >= min_block_load[sb_idx])
-                solver.Add(sb_demand <= max_block_load[sb_idx])
-
-        # Constraint: site-days are sufficiently load-balanced.
-        if 'day_load_tolerance' in config['policy']['bounds']:
-            day_load_tol = (config['policy']['bounds']
-                            ['day_load_tolerance']['max'])
-            target_day_load = total_demand * weights['day_weights']
-            min_day_load = (1 - day_load_tol) * target_day_load
-            max_day_load = (1 + day_load_tol) * target_day_load
-            for sd_idx in range(n_site_days):
-                sd_demand = solver.Sum(
-                    site_days[i, sd_idx] * schedule_counts[i]
-                    for i in range(n_schedules)
-                )
-                solver.Add(sd_demand >= min_day_load[sd_idx])
-                solver.Add(sd_demand <= max_day_load[sd_idx])
-
-    # Objective: minimize total matching cost.
-    solver.Minimize(solver.Sum([np.dot(a_row, c_row)
-                        for (a_row, c_row) in zip(assignments, costs)]))
-    status = solver.Solve()
-    if status == pywraplp.Solver.OPTIMAL:
-        person_assignments = []
-        for i, person in enumerate(people):
-            assignment = {
-                'id': person['id'],
-                'campus': person['campus'],
-                'cohort': person['cohort'],
-                'assigned': False
-            }
-            for j in range(n_schedules):
-                if (isinstance(assignments[i][j], pywraplp.Variable) and
-                        assignments[i][j].solution_value() == 1):
-                    schedule = testing_schedules[j]
-                    schedule_by_date = defaultdict(list)
-                    for block in schedule:
-                        block_date = block['date'].strftime('%Y-%m-%d')
-                        schedule_by_date[block_date].append({
-                            'site': block['site'],
-                            'block': block['block']
-                        })
-                    assignment['assigned'] = True
-                    assignment['schedule'] = schedule_by_date
-                    break
-            if not assignment['assigned']:
-                assignment['error'] = 'Not enough availability.'
-            person_assignments.append(assignment)
-        return person_assignments
-    if status == pywraplp.Solver.FEASIBLE:
-        raise AssignmentError('Could not generate assignments:'
-                              'solution is not optimal.')
-    # TODO: are there other statuses?
-    raise AssignmentError('Could not generate assignments:'
-                          'problem is infeasible.')
+    return schedule_counts
 
 
 
-class AssignmentError(Exception):
-    """Raised for errors when generating assignments."""
-    def __init__(self, message: str):
-        self.message = message
+def add_load_balancing(solver, config, people, schedules_by_cohort,
+                       schedule_counts, test_demand, start_date, end_date):
+    """Adds load balancing constraints (day- and/or block-level) to the MIP."""
+    # Determine total testing demand.
+    n_people = len(people)
+    n_schedules = len(schedule_counts)
+    total_demand = test_demand.sum()
 
+    # Generic constraint for site-{block, day} tolerance.
+    def site_time_constraint(tol, use_days):
+        weights, site_time_ids = site_weights(config, start_date, end_date,
+                                               use_days)
+        n_site_times = len(site_time_ids)
+        site_times = np.zeros((n_schedules, n_site_times))
+        for cohort, schedules in schedules_by_cohort.items():
+            for schedule in schedules:
+                sched_id = schedule['id']
+                for block in schedule['blocks']:
+                    if use_days:
+                        time_hash = (block['date'], block['site'])
+                    else:
+                        time_hash = (block['start'], block['site'])
+                    site_times[sched_id, site_time_ids[time_hash]] = 1
+
+        target_load = total_demand * weights
+        min_load = (1 - tol) * target_load
+        max_load = (1 + tol) * target_load
+        for time_idx in range(n_site_times):
+            demand = solver.Sum(site_times[i, time_idx] * schedule_counts[i]
+                                for i in range(n_schedules))
+            solver.Add(demand >= min_load[time_idx])
+            solver.Add(demand <= max_load[time_idx])
+
+    # Constraint: site-blocks are sufficiently load-balanced.
+    if 'block_load_tolerance' in config['policy']['bounds']:
+        block_load_tol = (config['policy']['bounds']
+                          ['block_load_tolerance']['max'])
+        site_time_constraint(block_load_tol, use_days=False)
+
+    # Constraint: site-days are sufficiently load-balanced.
+    if 'day_load_tolerance' in config['policy']['bounds']:
+        day_load_tol = (config['policy']['bounds']
+                        ['day_load_tolerance']['max'])
+        site_time_constraint(day_load_tol, use_days=True)
+
+
+def condense_assignments(people: List, schedules: Dict, assignments: List):
+    """Converts an assignment matrix to an assignment map."""
+    condensed_assignment = {}
+    for i, person in enumerate(people):
+        condensed_assignment[i] = None
+        for j, schedule in enumerate(schedules):
+            if (isinstance(assignments[i][j], pywraplp.Variable) and
+                    assignments[i][j].solution_value() == 1):
+                condensed_assignment[i] = j
+                break
+    return condensed_assignment
+
+
+def format_assignments(people: List, schedules: Dict, assignments: Dict):
+    """Converts an assignment map to the proper JSON schema."""
+    person_assignments = []
+    for person_idx, schedule_idx in assignments.items():
+        person = people[person_idx]
+        assignment = {
+            'id': person['id'],
+            'cohort': person['cohort'],
+            'campus': person['campus']
+        }
+        if schedule_idx is None:
+            assignment['assigned'] = False
+            assignment['error'] = 'Not enough availability.'
+        else:
+            schedule = schedules[schedule_idx]
+            schedule_by_date = defaultdict(list)
+            for block in schedule:
+                block_date = block['date'].strftime('%Y-%m-%d')
+                schedule_by_date[block_date].append({
+                    'site': block['site'],
+                    'block': block['block']
+                })
+            assignment['assigned'] = True
+            assignment['schedule'] = dict(schedule_by_date)
+        person_assignments.append(assignment)
+    return person_assignments

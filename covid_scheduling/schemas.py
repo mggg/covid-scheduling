@@ -52,12 +52,13 @@ CONFIG_SCHEMA = Schema({
                 }
             },
             Optional('bounds'): {
-                Or('day_load_tolerance', 'block_load_tolerance'): {
+                Optional(Or('day_load_tolerance', 'block_load_tolerance')): {
                     'max':
                     And(Or(int, float),
                         lambda x: x >= 0,
                         error='Bounds: maximum tolerance must be positive.')
-                }
+                },
+                Optional('allow_site_splits'): bool
             }
         },
         'sites': {
