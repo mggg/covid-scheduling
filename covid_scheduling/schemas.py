@@ -4,9 +4,7 @@ from copy import deepcopy
 from typing import Dict, List
 from dateutil.parser import parse as ts_parse
 from schema import Schema, And, Or, Optional, Regex, SchemaError
-
-DAYS = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
-        'Sunday')
+from .constants import DAYS
 
 # YYYY-MM-DD format: https://www.regextester.com/96683
 DATE_REGEX = r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
