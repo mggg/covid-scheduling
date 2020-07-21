@@ -10,12 +10,10 @@ from .constants import DAYS, SEC_PER_DAY, MIDNIGHT
 
 MAX_DAYS = 14
 MAX_TESTS = 2
-ASSIGNMENT_METHODS = {
-    'bipartite': bipartite_assign
-}
+ASSIGNMENT_METHODS = {'bipartite': bipartite_assign}
 
-def schedule_cost(schedule: List[Dict],
-                  person: Dict,
+
+def schedule_cost(schedule: List[Dict], person: Dict,
                   target_interval: float) -> float:
     """Computes the cost (spacing + site) of a schedule.
 
@@ -27,7 +25,7 @@ def schedule_cost(schedule: List[Dict],
     cost = 0
     for left_b, right_b in zip(schedule[:-1], schedule[1:]):
         delta_sec = (right_b['start'] - left_b['start']).total_seconds()
-        cost += ((delta_sec / SEC_PER_DAY) - target_interval) ** 2
+        cost += ((delta_sec / SEC_PER_DAY) - target_interval)**2
     return cost
 
 
@@ -75,8 +73,7 @@ def assign_schedules(config: Dict,
         schedules_by_cohort = {
             co: add_sites_to_schedules(
                 cohort_schedules(campus_config, co, n_tests[co], blocks),
-                campus_config
-            )
+                campus_config)
             for co in campus_config['policy']['cohorts'].keys()
         }
         schedules, schedules_by_cohort = schedule_ordering(schedules_by_cohort)
@@ -87,22 +84,20 @@ def assign_schedules(config: Dict,
         except ValueError:
             raise AssignmentError(f'Assignment method "{method}" '
                                   'not available.')
-        condensed = assign_fn(
-            config=campus_config,
-            people=campus_people,
-            start_date=start_date,
-            end_date=end_date,
-            schedules=schedules,
-            schedules_by_cohort=schedules_by_cohort,
-            test_demand=demand,
-            cost_fn=schedule_cost
-        )
+
+        condensed = assign_fn(config=campus_config,
+                              people=campus_people,
+                              start_date=start_date,
+                              end_date=end_date,
+                              schedules=schedules,
+                              schedules_by_cohort=schedules_by_cohort,
+                              test_demand=demand,
+                              cost_fn=schedule_cost)
         assignments += format_assignments(people, schedules, condensed)
     return assignments
 
 
-def format_assignments(people: List,
-                       schedules: Dict,
+def format_assignments(people: List, schedules: Dict,
                        assignments: Dict) -> List:
     """Converts an assignment map to the proper JSON schema."""
     person_assignments = []
@@ -131,8 +126,7 @@ def format_assignments(people: List,
     return person_assignments
 
 
-def schedule_blocks(config: Dict,
-                    start_date: datetime,
+def schedule_blocks(config: Dict, start_date: datetime,
                     end_date: datetime) -> List:
     """Enumerates schedule blocks in a date window."""
     blocks = []
@@ -152,9 +146,7 @@ def schedule_blocks(config: Dict,
     return sorted(blocks, key=lambda b: b['start'])
 
 
-def cohort_schedules(config: Dict,
-                     cohort: str,
-                     n_tests: int,
+def cohort_schedules(config: Dict, cohort: str, n_tests: int,
                      blocks: List) -> List:
     """Enumerates possible schedules for a cohort."""
     min_interval_sec = (SEC_PER_DAY *
@@ -193,8 +185,10 @@ def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[Dict]:
             perm_valid = True
             for site, block in zip(site_perm, schedule):
                 # Filter out infeasible permutations.
-                day_hours = [h for h in config['sites'][site]['hours']
-                             if h['day'] == block['weekday']]
+                day_hours = [
+                    h for h in config['sites'][site]['hours']
+                    if h['day'] == block['weekday']
+                ]
                 block_start = block['start'].replace(**default_day)
                 block_end = block['end'].replace(**default_day)
                 overlap = False

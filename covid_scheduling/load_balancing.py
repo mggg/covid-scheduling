@@ -27,8 +27,9 @@ def site_weights(config: Dict,
                 weekday = ts.strftime('%A')
                 # Determine seconds of overlap between site availability
                 # windows and schedule blocks.
-                hours = [s for s in sites[site]['hours']
-                         if s['day'] == weekday]
+                hours = [
+                    s for s in sites[site]['hours'] if s['day'] == weekday
+                ]
                 for window in hours:
                     start = max(block['start'], window['start'])
                     end = min(block['end'], window['end'])

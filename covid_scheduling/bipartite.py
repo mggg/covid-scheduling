@@ -6,13 +6,10 @@ from ortools.linear_solver import pywraplp
 from .errors import AssignmentError
 from .load_balancing import site_weights
 
-def bipartite_assign(config: Dict,
-                     people: List,
-                     start_date: datetime,
-                     end_date: datetime,
-                     schedules: List,
-                     schedules_by_cohort: Dict,
-                     test_demand: np.ndarray,
+
+def bipartite_assign(config: Dict, people: List, start_date: datetime,
+                     end_date: datetime, schedules: List,
+                     schedules_by_cohort: Dict, test_demand: np.ndarray,
                      cost_fn: Callable) -> Dict:
     """Assigns people to schedules using bipartite maching."""
     # Formulate IP minimum-cost matching problem.
@@ -25,26 +22,27 @@ def bipartite_assign(config: Dict,
         schedules=schedules,
         schedules_by_cohort=schedules_by_cohort,
         test_demand=test_demand,
-        cost_fn=cost_fn
-    )
+        cost_fn=cost_fn)
 
-    solver.Minimize(solver.Sum([np.dot(a_row, c_row)
-                        for (a_row, c_row) in zip(assignments, costs)]))
+    # Objective: minimize total matching cost.
+    solver.Minimize(
+        solver.Sum([
+            np.dot(a_row, c_row) for (a_row, c_row) in zip(assignments, costs)
+        ]))
+
     # Add load-balancing constraints (optional).
-    if ('day_load_tolerance' in config['policy']['bounds'] or
-            'block_load_tolerance' in config['policy']['bounds']):
+    if ('day_load_tolerance' in config['policy']['bounds']
+            or 'block_load_tolerance' in config['policy']['bounds']):
         # Introduce an auxiliary vector to count schedule occurrences.
         schedule_counts = add_schedule_counts(solver, assignments)
-        add_load_balancing(
-            solver=solver,
-            config=config,
-            people=people,
-            schedules_by_cohort=schedules_by_cohort,
-            schedule_counts=schedule_counts,
-            test_demand=test_demand,
-            start_date=start_date,
-            end_date=end_date
-        )
+        add_load_balancing(solver=solver,
+                           config=config,
+                           people=people,
+                           schedules_by_cohort=schedules_by_cohort,
+                           schedule_counts=schedule_counts,
+                           test_demand=test_demand,
+                           start_date=start_date,
+                           end_date=end_date)
 
     status = solver.Solve()
     if status == pywraplp.Solver.OPTIMAL:
@@ -56,19 +54,20 @@ def bipartite_assign(config: Dict,
                           f'infeasible or unbounded (status code {status}).')
 
 
-def add_assignments(solver: pywraplp.Solver,
-                    config: Dict,
-                    people: List,
-                    schedules: Dict,
-                    schedules_by_cohort: Dict,
+def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
+                    schedules: Dict, schedules_by_cohort: Dict,
                     test_demand: np.ndarray,
                     cost_fn: Callable) -> Tuple[List[List], np.ndarray]:
     """Generates assignment and cost matrices."""
     # Cache compatibility sets.
-    testing_blocks = {idx: set((s['date'], s['block']) for s in sched)
-                      for idx, sched in schedules.items()}
-    testing_sites = {idx: set(s['site'] for s in sched)
-                      for idx, sched in schedules.items()}
+    testing_blocks = {
+        idx: set((s['date'], s['block']) for s in sched)
+        for idx, sched in schedules.items()
+    }
+    testing_sites = {
+        idx: set(s['site'] for s in sched)
+        for idx, sched in schedules.items()
+    }
     people_sites = [set(person['site_rank']) for person in people]
     people_blocks = []
     for person in people:
@@ -103,22 +102,24 @@ def add_assignments(solver: pywraplp.Solver,
             #  * There are no testing sites in the testing schedule
             #    that the person did not rank.
             s_idx = schedule['id']
-            if (len(schedule['blocks']) == test_demand[s_idx] and
-                    not testing_blocks[s_idx] - people_blocks[p_idx] and
-                    not testing_sites[s_idx]  - people_sites[p_idx]):
+            if (len(schedule['blocks']) == test_demand[s_idx]
+                    and not testing_blocks[s_idx] - people_blocks[p_idx]
+                    and not testing_sites[s_idx] - people_sites[p_idx]):
                 assn = solver.IntVar(0, 1, f'assignments[{p_idx}, {s_idx}]')
                 assignments[p_idx][s_idx] = assn
-                target = (config['policy']['cohorts'][cohort]
-                          ['interval']['target'])
-                costs[p_idx, s_idx] = cost_fn(schedule['blocks'], person, target)
+                target = (
+                    config['policy']['cohorts'][cohort]['interval']['target'])
+                costs[p_idx, s_idx] = cost_fn(schedule['blocks'], person,
+                                              target)
                 n_matches += 1
         # Constraint: each person has exactly one schedule assignment.
         # TODO: How do we want to handle this sort of filtering? The
         # best option is probably some kind of warning in the API
         # output (without an actual assignment).
         if n_matches > 0:
-            solver.Add(solver.Sum(assignments[p_idx][j]
-                                  for j in range(n_schedules)) == 1)
+            solver.Add(
+                solver.Sum(assignments[p_idx][j]
+                           for j in range(n_schedules)) == 1)
     return assignments, costs
 
 
@@ -132,21 +133,14 @@ def add_schedule_counts(solver: pywraplp.Solver,
         for i in range(n_schedules):
             sched_count = solver.IntVar(0, n_people, f'count{i}')
             schedule_counts.append(sched_count)
-            solver.Add(
-                sched_count == solver.Sum(
-                    assignments[j][i] for j in range(n_people)
-                )
-            )
+            solver.Add(sched_count == solver.Sum(assignments[j][i]
+                                                 for j in range(n_people)))
     return schedule_counts
 
 
-def add_load_balancing(solver: pywraplp.Solver,
-                       config: Dict,
-                       people: List,
-                       schedules_by_cohort: Dict,
-                       schedule_counts: List,
-                       test_demand: np.ndarray,
-                       start_date: datetime,
+def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
+                       schedules_by_cohort: Dict, schedule_counts: List,
+                       test_demand: np.ndarray, start_date: datetime,
                        end_date: datetime) -> None:
     """Adds load balancing constraints (day- and/or block-level) to the MIP."""
     # Determine total testing demand.
@@ -157,7 +151,7 @@ def add_load_balancing(solver: pywraplp.Solver,
     # Generic constraint for site-{block, day} tolerance.
     def site_time_constraint(tol, use_days):
         weights, site_time_ids = site_weights(config, start_date, end_date,
-                                               use_days)
+                                              use_days)
         n_site_times = len(site_time_ids)
         site_times = np.zeros((n_schedules, n_site_times))
         for cohort, schedules in schedules_by_cohort.items():
@@ -181,27 +175,26 @@ def add_load_balancing(solver: pywraplp.Solver,
 
     # Constraint: site-blocks are sufficiently load-balanced.
     if 'block_load_tolerance' in config['policy']['bounds']:
-        block_load_tol = (config['policy']['bounds']
-                          ['block_load_tolerance']['max'])
+        block_load_tol = (
+            config['policy']['bounds']['block_load_tolerance']['max'])
         site_time_constraint(block_load_tol, use_days=False)
 
     # Constraint: site-days are sufficiently load-balanced.
     if 'day_load_tolerance' in config['policy']['bounds']:
-        day_load_tol = (config['policy']['bounds']
-                        ['day_load_tolerance']['max'])
+        day_load_tol = (
+            config['policy']['bounds']['day_load_tolerance']['max'])
         site_time_constraint(day_load_tol, use_days=True)
 
 
-def condense_assignments(people: List,
-                         schedules: Dict,
+def condense_assignments(people: List, schedules: Dict,
                          assignments: List) -> Dict:
     """Converts an assignment matrix to an assignment map."""
     condensed_assignment = {}
     for i, person in enumerate(people):
         condensed_assignment[i] = None
         for j, schedule in enumerate(schedules):
-            if (isinstance(assignments[i][j], pywraplp.Variable) and
-                    assignments[i][j].solution_value() == 1):
+            if (isinstance(assignments[i][j], pywraplp.Variable)
+                    and assignments[i][j].solution_value() == 1):
                 condensed_assignment[i] = j
                 break
     return condensed_assignment
