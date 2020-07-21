@@ -72,6 +72,7 @@ def assignment_stats(people: List,
         site = schedules[s_idx][0]['site']
         # JSON serialization doesn't like NumPy types.
         stats.append({
+            'id': people[p_idx]['id'],
             'min_cost': float(min_cost),
             'actual_cost': float(actual_cost),
             'cost_optimal': bool(abs(min_cost - actual_cost) < 1e-10),
