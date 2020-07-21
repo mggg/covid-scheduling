@@ -102,7 +102,7 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
             #  * There are no testing sites in the testing schedule
             #    that the person did not rank.
             s_idx = schedule['id']
-            if (len(schedule['blocks']) == test_demand[s_idx]
+            if (len(schedule['blocks']) == test_demand[p_idx]
                     and not testing_blocks[s_idx] - people_blocks[p_idx]
                     and not testing_sites[s_idx] - people_sites[p_idx]):
                 assn = solver.IntVar(0, 1, f'assignments[{p_idx}, {s_idx}]')
