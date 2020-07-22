@@ -28,7 +28,7 @@ python assign_json.py --config-file data/tufts.json --people-file data/tufts_sam
 
 ## API
 To start a simple Flask-based JSON API is available; execute `FLASK_DEBUG=1 flask run` to start the development server. The API accepts `POST` requests to the root endpoint of the format
-```json
+```
 {
   "start_date": "YYYY-MM-DD",
   "end_date": "YYYY-MM-DD",
@@ -38,7 +38,7 @@ To start a simple Flask-based JSON API is available; execute `FLASK_DEBUG=1 flas
 ```
 
 The output schema of a successful request is
-```json
+```
 {
   "people": { <roster of people, with assignments> },
   "stats": { <person-level assignment statistics> }
