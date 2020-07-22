@@ -31,7 +31,7 @@ python assign_json.py --config-file data/tufts.json --people-file data/tufts_sam
 **Note: the scheduler currently supports only weeklong intervals starting on a Monday. This is a known limitation and will be resolved shortly.**
 
 ## API
-To start a simple Flask-based JSON API is available; execute `FLASK_DEBUG=1 flask run` to start the development server. The API accepts `POST` requests to the root endpoint of the format
+To start a simple Flask-based JSON API, execute `FLASK_DEBUG=1 flask run` to start the development server. The API accepts `POST` requests to the root endpoint of the format
 ```
 {
   "start": "YYYY-MM-DD",
