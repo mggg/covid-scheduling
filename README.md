@@ -5,6 +5,8 @@ This repository contains scheduling algorithms to assign people (students, facul
 ## Getting started
 This tool has been most extensively tested with Python 3.8, but it should work with Python 3.6 or above. For development, we recommend installing all dependencies in a virtual environment managed with [Anaconda](https://www.anaconda.com/). All dependencies can be installed with `pip install -r requirements.txt`. To deploy to Heroku, [create an app](https://devcenter.heroku.com/articles/creating-apps) and push using `git push heroku main`.
 
+Full documentation, extensive unit tests, and CI/CD integration are forthcoming.
+
 ## Inputs
 ### University-level configuration
 An example university configuration, loosely based on Tufts' reopening plans, is available at `data/tufts.json`. The `policy` section contains parameters that are not likely to change frequently, such as the testing block schedule (as displayed in the app), cohort information, and load balancing tolerances. The `sites` section contains the hours and capacity of individual testing sites; these hours are likely to change from week to week.
@@ -30,8 +32,8 @@ python assign_json.py --config-file data/tufts.json --people-file data/tufts_sam
 To start a simple Flask-based JSON API is available; execute `FLASK_DEBUG=1 flask run` to start the development server. The API accepts `POST` requests to the root endpoint of the format
 ```
 {
-  "start_date": "YYYY-MM-DD",
-  "end_date": "YYYY-MM-DD",
+  "start": "YYYY-MM-DD",
+  "end": "YYYY-MM-DD",
   "config": { <configuration> },
   "people": { <roster of people> }
 }
@@ -43,6 +45,11 @@ The output schema of a successful request is
   "people": { <roster of people, with assignments> },
   "stats": { <person-level assignment statistics> }
 }
+```
+
+For example, the request body used in the July 21, 2020 demo can be POSTed to a local development server with
+```
+curl -X POST -H "Content-Type: application/json" -d @data/tufts_request_example.json http://localhost:5000/
 ```
 
 ## The algorithm
