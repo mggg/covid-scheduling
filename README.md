@@ -14,6 +14,8 @@ An example university configuration, loosely based on Tufts' reopening plans, is
 ### Personal availability
 An example roster of 5,000 randomly generated personal schedules is available at `data/tufts_sample_5000.json`. Use the `experiments/random_schedules.py` script to generate more random schedules; the `ScheduleSampler` in this script can be adjusted to vary the relative weighting of cohorts and the allowable schedules within each cohort.
 
+Full schema information for the university-level configuration and the personal roster is available in `covid_scheduling/schemas.py`.
+
 ## Command-line interface
 To generate assignments from the command line, run
 
