@@ -1,4 +1,6 @@
 # COVID-19 Test Scheduling
+[![CircleCI](https://circleci.com/gh/mggg/covid-scheduling.svg?style=svg)](https://circleci.com/gh/mggg/covid-scheduling)
+[![codecov.io](https://codecov.io/github/mggg/covid-scheduling/coverage.svg?branch=master)](https://codecov.io/github/mggg/covid-scheduling?branch=main)
 
 This repository contains scheduling algorithms to assign people (students, faculty, and staff) at universities to surveillance testing schedules. Surveillance testing is a key component of many campus reopening strategies, and the logistics of testing thousands of busy people multiple times a week without long lines at testing centers are nontrivial. Tufts University is developing a campus monitoring app that allows members of the testing population to specify their testing availability and preferred testing locations. This tool aggregates personal schedules and university-level information (such as the desired testing frequencies for population cohorts) to produce a scheduling with optimal schedules that satisfy the population's preferences and epidemiological needs as well as possible while avoiding testing center overload.
 
