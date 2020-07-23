@@ -27,7 +27,7 @@ jobs:
           command: |
             . venv/bin/activate
             python3 -m yapf --diff --recursive covid_scheduling tests *.py
-      -run:
+      - run:
           name: Check typing
           command: |
             . venv/bin/activate
