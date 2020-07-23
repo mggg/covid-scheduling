@@ -47,7 +47,8 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
     status = solver.Solve()
     if status == pywraplp.Solver.OPTIMAL:
         condensed = condense_assignments(people, schedules, assignments)
-        stats = assignment_stats(people, schedules, test_demand, costs, condensed)
+        stats = assignment_stats(people, schedules, test_demand, costs,
+                                 condensed)
         return condensed, stats
     if status == pywraplp.Solver.FEASIBLE:
         raise AssignmentError('Could not generate assignments: '
@@ -56,11 +57,8 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
                           f'infeasible or unbounded (status code {status}).')
 
 
-def assignment_stats(people: List,
-                     schedules: Dict,
-                     test_demand: np.ndarray,
-                     costs: np.ndarray,
-                     assignment: Dict) -> List:
+def assignment_stats(people: List, schedules: Dict, test_demand: np.ndarray,
+                     costs: np.ndarray, assignment: Dict) -> List:
     """Computes basic statistics about the assignment."""
     stats = []
     for p_idx, s_idx in assignment.items():
@@ -81,6 +79,7 @@ def assignment_stats(people: List,
             'test_supply': len(schedules[s_idx])
         })
     return stats
+
 
 def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                     schedules: Dict, schedules_by_cohort: Dict,
