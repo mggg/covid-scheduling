@@ -5,10 +5,10 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.8
-    # based on CircleCI v2.0 project walkthrough
-    # https://circleci.com/docs/2.0/project-walkthrough/
+      # based on CircleCI v2.0 project walkthrough
+      # https://circleci.com/docs/2.0/project-walkthrough/
     steps:
-       - checkout
+      - checkout
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
       - run:
