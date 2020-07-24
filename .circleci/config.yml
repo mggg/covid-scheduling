@@ -37,10 +37,10 @@ jobs:
           command: |
             mkdir test-results cov-results
             . venv/bin/activate
-            python3 -m pytest -vv --junitxml=test-results/junit.xml --cov=./
+            python3 -m pytest -vv --junitxml=test-results/junit.xml --cov=./ --cov-report xml
       - store_test_results:
           path: test-results
       - store_artifacts:
           path: test-results
       - codecov/upload:
-          file: {{ coverage_report_filepath }}
+          file: coverage.xml
