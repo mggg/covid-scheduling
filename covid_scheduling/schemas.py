@@ -130,10 +130,14 @@ PEOPLE_SCHEMA = Schema([{
 def validate_config(config: Dict) -> Dict:
     """"Validates and type-converts a university-level configuration.
 
-    :param config: The raw configuration to be validated.
-    :return: The configuration with timestamps converted to `datetime` objects
-             and appropriate default fields added.
-    :raises:
+    Args:
+        config: The raw configuration to be validated.
+
+    Returns:
+        The configuration with timestamps converted to `datetime` objects
+        and appropriate default fields added.
+
+    Raises:
         SchemaError: If the configuration is malformed.
     """
 
@@ -197,11 +201,15 @@ def validate_config(config: Dict) -> Dict:
 def validate_people(people: List, config: Dict) -> List:
     """Validates and type-converts a university-level roster of people.
 
-    :param people: The raw roster to be validated.
-    :param config: The university-level configuration,
-                   **presumed to be valid**.
-    :return: The roster with timestamps converted to `datetime` objects.
-    :raises:
+    Args:
+        people: The raw roster to be validated.
+        config: The university-level configuration validated by
+            `validate_config`.
+
+    Returns:
+        The roster with timestamps converted to `datetime` objects.
+
+    Raises:
         SchemaError: If the roster is malformed.
     """
     people = deepcopy(people)

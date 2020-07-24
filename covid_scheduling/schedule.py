@@ -36,14 +36,17 @@ def assign_schedules(config: Dict,
                      method: str = 'bipartite') -> Tuple[List, List]:
     """Assigns people to testing schedules.
 
-    :param config: A validated university-level configuration.
-    :param people: A validated roster of people.
-    :param start_date: The first day in the assignment range.
-    :param end_date: The first day in the assignment range (inclusive).
-    :param method: The assignment algorithm to use (only bipartite
-        matching is available; heuristic algorithms may be
-        added in the future).
-    :return: Testing schedules for each person (with warnings).
+    Args:
+        config: A validated university-level configuration.
+        people: A validated roster of people.
+        start_date: The first day in the assignment range.
+        end_date: The first day in the assignment range (inclusive).
+        method: The assignment algorithm to use (only bipartite
+            matching is available; heuristic algorithms may be
+            added in the future).
+
+    Returns:
+        Testing schedules for each person (with warnings).
     """
     n_days = (end_date - start_date).days + 1
     if n_days >= MAX_DAYS:

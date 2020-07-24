@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime, timedelta
 import pytest
 from schema import SchemaError
@@ -143,3 +144,10 @@ def test_validate_people_schedule_duplicate_site(people_simple_raw,
 def test_validate_people_schedule_datetime(people_simple, config_simple_all):
     for key in people_simple[0]['schedule']:
         assert isinstance(key, datetime)
+
+
+def test_validate_people_unique_ids(people_simple_raw,
+                                    config_simple_all):
+    people_simple_raw.append(deepcopy(people_simple_raw[0]))
+    with pytest.raises(SchemaError):
+        validate_people(people_simple_raw, config_simple_all)

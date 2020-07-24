@@ -1,4 +1,4 @@
-"""Bipartite matching-based schedule assignment algorithms."""
+"""Bipartite matching-based schedule assignment."""
 from typing import Dict, List, Tuple, Callable, Union, Any
 from datetime import datetime
 import numpy as np  # type: ignore
@@ -11,7 +11,55 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
                      end_date: datetime, schedules: Dict,
                      schedules_by_cohort: Dict, test_demand: np.ndarray,
                      cost_fn: Callable) -> Tuple[Dict, List]:
-    """Assigns people to schedules using bipartite maching."""
+    """Assigns people to schedules using bipartite maching.
+
+    We solve a mixed integer program (MIP) that assigns each person to
+    at most one schedule such that the total matching cost is minimized.
+    (The cost of matching a person with a testing schedule is determined
+    by `cost_fn`.)
+
+    This is a _bipartite matching_ problem: people and schedules compose
+    the two parts of a bipartite graph, with edges weighted by cost between
+    people and schedules when they are compatible.
+
+    Depending on the configuration, the problem may also be subject to
+    site-day and site-block load balancing constraints that ensure demand
+    does not vary too much at any site over time.
+
+    Args:
+        config: The campus-level configuration.
+        people: The roster of people to match.
+        start_date: The first day of testing. Only date information is used.
+        end_date: The last day of testing. Only date information is used.
+        schedules: Schedules by unique ID (starting at 0).
+        schedules_by_cohort: Schedules grouped by cohort compatibility;
+            some may be duplicates. Each schedule should be in the form
+            `{"blocks": <schedule data>, "id": <unique ID>}` for easy
+            deduplication. (The schedules in `schedules` do not require
+            this wrapper.)
+        test_demand: A vector with dimension and indices matching
+            `people` indicating the number of tests required by each
+            person. Usually, a person's test demand is based entirely on
+            their cohort, but we may need to support cases with individual
+            exceptions.
+        cost_fn: A function which expects a person, a schedule, and a target
+            testing interval (in days) and returns a `float` indicating
+            the cost of matching the person with the testing schedule.
+            In practice, this function should use information about the
+            schedule's testing interval, the person's site preferences,
+            and the person's testing history.
+
+    Returns:
+        A tuple containing:
+            * A dictionary mapping people (by index) to their assigned
+              schedule ID if a match is found and `None` otherwise.
+            * A list containing person-level matching statistics.
+
+    Raises:
+        AssignmentError: If the matching is not optimal or the matching
+            problem is infeasible or unbounded. The status code used
+            by Google OR-Tools may be included in the error message.
+    """
     # Formulate IP minimum-cost matching problem.
     solver = pywraplp.Solver('SolveAssignmentProblem',
                              pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
@@ -85,7 +133,48 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                     schedules: Dict, schedules_by_cohort: Dict,
                     test_demand: np.ndarray,
                     cost_fn: Callable) -> Tuple[List[List], np.ndarray]:
-    """Generates assignment and cost matrices."""
+    """Generates assignment and cost matrices.
+
+    The matching problem is constrained by compatibility. A person's schedule
+    and a testing schedule are said to be compatible when:
+        * The person is available during all blocks in the schedule.
+        * The person has ranked all sites in the schedule.
+        * The number of blocks in the schedule matches the person's demand.
+
+    Thus, some people may not be matched with a schedule, typically due to
+    lack of availability. This is not considered a fatal error; the person
+    is simply excluded from the matching.
+
+    When a person and a schedule _are_ compatible, a binary assignment
+    variable of type `pywraplp.Solver.IntVar` is added to the problem and
+    stored in the returned assignment matrix; the cost of the match is
+    stored in the corresponding location in the returned cost matrix. When a
+    person has at least one match, a constraint is added to the problem to
+    ensure that the sum of assignment variables for that person is exactly
+    1---that is, the person is assigned to exactly one schedule.
+
+    When a person and a schedule _are not_ compatible, no assignment variable
+    is created; the pairing's entry in the assignment matrix is set to 0,
+    and the corresponding cost is set to -1.
+
+    Args:
+        solver: The MIP solver to add assignment variables and constraints to.
+        config: The campus configuration.
+        people: The roster of people to match.
+        schedules: Schedules by unique ID (starting at 0).
+        schedules_by_cohort: Schedules grouped by cohort compatibility;
+            duplicates may exist, so a unique ID is included with each
+            schedule.
+        test_demand: A vector indicating each person's test demand.
+        cost_fn: A function that determines the cost of a matching.
+
+    Returns:
+        A tuple containing:
+            * The assignment matrix. This is a `list` of `list`s rather
+              than a `np.ndarray` to easily allow mixed typing between
+              `pywraplp.Variable` elements and integer elements.
+            * The cost matrix corresponding to the assignment matrix.
+    """
     # Cache compatibility sets.
     testing_blocks = {
         idx: set((s['date'], s['block']) for s in sched)
@@ -113,21 +202,6 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
         cohort = person['cohort']
         n_matches = 0
         for schedule in schedules_by_cohort[cohort]:
-            # A person-schedule assignment variable is only created if
-            # the person is compatible with a testing schedule. Thus,
-            # the resulting `assignments` matrix is a mix of variables
-            # (either 0 or 1; to be determined by the solver)
-            # and fixed 0 entries that the solver ignores.
-            #
-            # A testing schedule and a personal schedule are said to be
-            # compatible when:
-            #  * The number of tests demanded by the person (determined
-            #    by their cohort) matches the number of tests in the
-            #    testing schedule.
-            #  * There are no blocks in the testing schedule for which
-            #    the person is unavailable.
-            #  * There are no testing sites in the testing schedule
-            #    that the person did not rank.
             s_idx = schedule['id']
             if (len(schedule['blocks']) == test_demand[p_idx]
                     and not testing_blocks[s_idx] - people_blocks[p_idx]
@@ -140,9 +214,6 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                                               target)
                 n_matches += 1
         # Constraint: each person has exactly one schedule assignment.
-        # TODO: How do we want to handle this sort of filtering? The
-        # best option is probably some kind of warning in the API
-        # output (without an actual assignment).
         if n_matches > 0:
             solver.Add(
                 solver.Sum(assignments[p_idx][j]
@@ -150,9 +221,26 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
     return assignments, costs
 
 
-def add_schedule_counts(solver: pywraplp.Solver,
-                        assignments: List[List]) -> List:
-    """Adds an auxiliary schedule counts vector to the MIP."""
+def add_schedule_counts(
+        solver: pywraplp.Solver,
+        assignments: List[List]) -> List[pywraplp.Solver.IntVar]:
+    """Adds an auxiliary schedule counts vector to the MIP.
+
+    The schedule counts vector is used for load balancing; it could
+    potentially be useful for other constraints. Constraints are
+    added to ensure that each schedule count variable is equal
+    to exactly the number of people with a particular schedule.
+
+    Args:
+        solver: The MIP solver to add the schedule counts variables
+            and constraints to.
+        assignments: The assignment matrix used by the MIP solver.
+
+    Returns:
+        A list of integer-valued solver variables indicating the number
+        of people assigned to a particular schedule, with each index
+        corresponding to the schedule's unique ID.
+    """
     schedule_counts = []
     n_people = len(assignments)
     n_schedules = len(assignments[0])
