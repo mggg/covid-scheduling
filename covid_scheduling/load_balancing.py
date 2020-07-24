@@ -1,8 +1,8 @@
 """Utility functions for load balancing."""
 from datetime import datetime, timedelta
 from typing import Dict
-import numpy as np
-from .constants import DAYS, MIDNIGHT
+import numpy as np  # type: ignore
+from covid_scheduling.constants import DAYS, MIDNIGHT
 
 
 def site_weights(config: Dict,

@@ -1,14 +1,14 @@
 """Bipartite matching-based schedule assignment algorithms."""
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, Union, Any
 from datetime import datetime
-import numpy as np
-from ortools.linear_solver import pywraplp
-from .errors import AssignmentError
-from .load_balancing import site_weights
+import numpy as np  # type: ignore
+from ortools.linear_solver import pywraplp  # type: ignore
+from covid_scheduling.errors import AssignmentError
+from covid_scheduling.load_balancing import site_weights
 
 
 def bipartite_assign(config: Dict, people: List, start_date: datetime,
-                     end_date: datetime, schedules: List,
+                     end_date: datetime, schedules: Dict,
                      schedules_by_cohort: Dict, test_demand: np.ndarray,
                      cost_fn: Callable) -> Tuple[Dict, List]:
     """Assigns people to schedules using bipartite maching."""
@@ -60,7 +60,7 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
 def assignment_stats(people: List, schedules: Dict, test_demand: np.ndarray,
                      costs: np.ndarray, assignment: Dict) -> List:
     """Computes basic statistics about the assignment."""
-    stats = []
+    stats: List = []
     for p_idx, s_idx in assignment.items():
         if s_idx is None:
             stats.append({})
@@ -214,9 +214,9 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
 
 
 def condense_assignments(people: List, schedules: Dict,
-                         assignments: List) -> Dict:
+                         assignments: List) -> Dict[int, Union[int, None]]:
     """Converts an assignment matrix to an assignment map."""
-    condensed_assignment = {}
+    condensed_assignment: Dict[int, Union[int, None]] = {}
     for i, person in enumerate(people):
         condensed_assignment[i] = None
         for j, schedule in enumerate(schedules):

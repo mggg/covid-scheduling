@@ -5,7 +5,7 @@ from covid_scheduling import (validate_people, validate_config,
 
 if __name__ == '__main__':
     with open('data/tufts.json') as f:
-        config = validate_config(json.load(f)['campuses'])
+        config = validate_config(json.load(f))
     with open('data/tufts_sample_5000.json') as f:
         people = validate_people(json.load(f), config)
     print(

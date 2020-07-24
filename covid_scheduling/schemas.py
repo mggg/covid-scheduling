@@ -3,8 +3,8 @@ import datetime
 from copy import deepcopy
 from typing import Dict, List
 from dateutil.parser import parse as ts_parse
-from schema import Schema, And, Or, Optional, Regex, SchemaError
-from .constants import DAYS
+from schema import Schema, And, Or, Optional, Regex, SchemaError  # type: ignore
+from covid_scheduling.constants import DAYS
 
 # YYYY-MM-DD format: https://www.regextester.com/96683
 DATE_REGEX = r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
@@ -190,7 +190,7 @@ def validate_config(config: Dict) -> Dict:
     return config
 
 
-def validate_people(people: List, config: Dict) -> Dict:
+def validate_people(people: List, config: Dict) -> List:
     """Validates and type-converts a university-level roster of people.
 
     :param people: The raw roster to be validated.

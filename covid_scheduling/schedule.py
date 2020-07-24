@@ -1,12 +1,12 @@
 """Campus block scheduling algorithms."""
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 from collections import defaultdict
 from datetime import datetime, timedelta
 from itertools import combinations, product
-import numpy as np
-from .errors import AssignmentError
-from .bipartite import bipartite_assign
-from .constants import DAYS, SEC_PER_DAY, MIDNIGHT
+import numpy as np  # type: ignore
+from covid_scheduling.errors import AssignmentError
+from covid_scheduling.bipartite import bipartite_assign
+from covid_scheduling.constants import DAYS, SEC_PER_DAY, MIDNIGHT
 
 MAX_DAYS = 14
 MAX_TESTS = 2
@@ -33,7 +33,7 @@ def assign_schedules(config: Dict,
                      people: List,
                      start_date: datetime,
                      end_date: datetime,
-                     method: str = 'bipartite') -> Tuple[Dict, List]:
+                     method: str = 'bipartite') -> Tuple[List, List]:
     """Assigns people to testing schedules.
 
     :param config: A validated university-level configuration.
@@ -169,7 +169,7 @@ def cohort_schedules(config: Dict, cohort: str, n_tests: int,
     return schedules
 
 
-def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[Dict]:
+def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[List]:
     """Augments a list of schedules with site permutations."""
     site_schedules = []
     sites = config['sites'].keys()
@@ -179,7 +179,7 @@ def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[Dict]:
         if allow_splits:
             # 💥 Warning: allowing schedules with multiple appointments
             # to split across sites may result in combinatorial explosion.
-            site_iter = product(sites, repeat=len(schedule))
+            site_iter: Iterable = product(sites, repeat=len(schedule))
         else:
             site_iter = [[site] * len(schedule) for site in sites]
         for site_perm in site_iter:
@@ -214,7 +214,7 @@ def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[Dict]:
 
 def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
     """Assigns a canonical ordering to unique schedules across cohorts."""
-    schedule_ids = {}
+    schedule_ids: Dict[Tuple, int] = {}
     schedules_by_id = {}
     schedules_by_cohort_with_id = {}
     sched_id = 0
@@ -225,11 +225,14 @@ def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
             for block in schedule:
                 block_hash = (block['start'], block['end'], block['site'])
                 uniq += list(block_hash)
-            uniq = tuple(uniq)
+            uniq_hash = tuple(uniq)
             if uniq in schedule_ids:
-                with_ids.append({'id': schedule_ids[uniq], 'blocks': schedule})
+                with_ids.append({
+                    'id': schedule_ids[uniq_hash],
+                    'blocks': schedule
+                })
             else:
-                schedule_ids[uniq] = sched_id
+                schedule_ids[uniq_hash] = sched_id
                 schedules_by_id[sched_id] = schedule
                 with_ids.append({'id': sched_id, 'blocks': schedule})
                 sched_id += 1
@@ -239,7 +242,7 @@ def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
 
 def testing_demand(config: Dict, people: List, n_tests: Dict) -> np.ndarray:
     """Calculates testing demand for each person."""
-    cohort_counts = defaultdict(int)
+    cohort_counts: Dict = defaultdict(int)
     n_people = len(people)
     test_demand = np.zeros(n_people, dtype=np.int)
     for idx, person in enumerate(people):
