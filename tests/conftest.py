@@ -2,13 +2,13 @@
 import pytest
 from dateutil.parser import parse as ts_parse
 from covid_scheduling.constants import DAYS
-from covid_scheduling.schemas import validate_config
+from covid_scheduling.schemas import validate_people, validate_config
 
 
 @pytest.fixture
-def config_simple():
+def config_simple_raw():
     """A configuration with one {cohort, schedule block, site}."""
-    return validate_config({
+    return {
         'Campus': {
             'policy': {
                 'blocks': {
@@ -45,7 +45,21 @@ def config_simple():
                 }
             }
         }
-    })['Campus']
+    }
+
+
+@pytest.fixture
+def config_simple(config_simple_raw):
+    """A validated configuration with one {cohort, schedule block, site}."""
+    return validate_config(config_simple_raw)['Campus']
+
+
+@pytest.fixture
+def config_simple_all(config_simple_raw):
+    """A validated configuration with one {cohort, schedule block, site}."""
+    # This fixture leaves the campus at the root level, whereas
+    # `config_simple` goes one level down by default.
+    return validate_config(config_simple_raw)
 
 
 @pytest.fixture
@@ -61,3 +75,24 @@ def config_two_blocks(config_simple):
         }  # 8-hour overlap
     }
     return config_simple
+
+
+@pytest.fixture
+def people_simple_raw():
+    """A one-person roster defined wrt the `config_simple` fixture."""
+    return [{
+        'id': 'a',
+        'campus': 'Campus',
+        'cohort': 'People',
+        'schedule': {
+            '2020-01-01': ['Block'],
+            '2020-01-03': ['Block']
+        },
+        'site_rank': ['Testing']
+    }]
+
+
+@pytest.fixture
+def people_simple(people_simple_raw, config_simple_all):
+    """A validated one-person roster defined wrt the `config_simple` fixture"""
+    return validate_people(people_simple_raw, config_simple_all)

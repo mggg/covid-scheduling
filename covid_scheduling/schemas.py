@@ -9,7 +9,7 @@ from covid_scheduling.constants import DAYS
 # YYYY-MM-DD format: https://www.regextester.com/96683
 DATE_REGEX = r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
 
-# HH:MM:SS format: based onhttps://regexlib.com/REDetails.aspx?regexp_id=59
+# HH:MM:SS format: based on https://regexlib.com/REDetails.aspx?regexp_id=59
 HH_MM_SS_REGEX = r'^([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$'
 
 # Basic structure is specified declaratively using `Schema` objects.
@@ -108,7 +108,7 @@ CONFIG_SCHEMA = Schema(
     ignore_extra_keys=True)
 
 PEOPLE_SCHEMA = Schema([{
-    Optional('id'):
+    'id':
     str,
     'campus':
     str,
@@ -143,10 +143,11 @@ def validate_config(config: Dict) -> Dict:
     #  * For any cohort interval: min <= target <= max
     #  * For any cohort interval: min is 0 if not specified
     #  * For any block: start <= end
-    #  * For any site hour block: start <= end
-    #  * For any site hour block: default weight is 1
+    #  * For any site block: start <= end
+    #  * For any site block: default weight is 1
     #  * For any site: no overlapping blocks on a given day.
     #  * All times should be `datetime` objects.
+    #  * An empty `bounds` object if one does not already exist.
     for campus in config.values():
         for cohort in campus['policy']['cohorts'].values():
             # TODO: Site ranking costs.
@@ -187,6 +188,9 @@ def validate_config(config: Dict) -> Dict:
                         raise SchemaError('Site hours: blocks cannot overlap '
                                           'within a day.')
                     max_time = block['end']
+
+        # Add a dummy bounds field if necessary.
+        campus['bounds'] = campus.get('bounds', {})
     return config
 
 
@@ -253,4 +257,9 @@ def validate_people(people: List, config: Dict) -> List:
             ts = ts_parse(person['last_test']['date'])
             person['last_test']['date'] = ts
         person['schedule'] = date_schedule
+
+    people_ids = set(p['id'] for p in people)
+    if len(people_ids) != len(people):
+        raise SchemaError('People: IDs must be unique.')
+
     return people
