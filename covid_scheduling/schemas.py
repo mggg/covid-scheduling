@@ -18,19 +18,20 @@ HH_MM_SS_REGEX = r'^([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])$'
 # as well as uniqueness constraints) cannot be specified declaratively
 # in this manner; validation  of these relationships should occur in the
 # validation functions.
+
+# STYLE EXCEPTION: Lines in this definiton may be ≤100 characters long.
+# yapf: disable
 CONFIG_SCHEMA = Schema(
     {
         str: {
             'policy': {
                 'blocks': {
                     str: {
-                        'start':
-                        Regex(
+                        'start': Regex(
                             HH_MM_SS_REGEX,
-                            error=
-                            'Blocks: start time must be in HH:MM:SS format.'),
-                        'end':
-                        Regex(
+                            error='Blocks: start time must be in HH:MM:SS format.'
+                        ),
+                        'end': Regex(
                             HH_MM_SS_REGEX,
                             error='Blocks: end time must be in HH:MM:SS format.'
                         ),
@@ -39,92 +40,83 @@ CONFIG_SCHEMA = Schema(
                 'cohorts': {
                     str: {
                         'interval': {
-                            Optional('min'):
-                            And(Or(int, float),
+                            Optional('min'): And(
+                                Or(int, float),
                                 lambda x: x >= 0,
-                                error=
-                                'Cohorts: minimum interval must be non-negative.'
-                                ),
-                            Optional('max'):
-                            And(Or(int, float),
+                                error='Cohorts: minimum interval must be non-negative.'
+                            ),
+                            Optional('max'): And(
+                                Or(int, float),
                                 lambda x: x >= 0,
-                                error=
-                                'Cohorts: maximum interval must be non-negative.'
-                                ),
-                            'target':
-                            And(Or(int, float),
+                                error='Cohorts: maximum interval must be non-negative.'
+                            ),
+                            'target': And(
+                                Or(int, float),
                                 lambda x: x >= 0,
-                                error=
-                                'Cohorts: target interval must be non-negative.'
-                                )
+                                error='Cohorts: target interval must be non-negative.'
+                            )
                         }
                     }
                 },
                 Optional('bounds'): {
-                    Optional(Or('day_load_tolerance', 'block_load_tolerance')):
-                    {
-                        'max':
-                        And(Or(int, float),
+                    Optional(Or('day_load_tolerance', 'block_load_tolerance')): {
+                        'max': And(
+                            Or(int, float),
                             lambda x: x >= 0,
                             error='Bounds: maximum tolerance must be positive.'
-                            )
+                         )
                     },
                     Optional('allow_site_splits'): bool
                 }
             },
             'sites': {
                 str: {
-                    'n_lines':
-                    And(int,
+                    'n_lines': And(
+                        int,
                         lambda x: x > 0,
-                        error=
-                        'Sites: number of lines must be a positive integer.'),
+                        error='Sites: number of lines must be a positive integer.'
+                    ),
                     'hours': [{
-                        'day':
-                        And(str,
+                        'day': And(
+                            str,
                             lambda s: s in DAYS,
-                            error='Site hours: day must be in ' + str(DAYS)),
-                        'start':
-                        Regex(
-                            HH_MM_SS_REGEX,
-                            error=
-                            'Site hours: start time must be in HH:MM:SS format.'
+                            error='Site hours: day must be in ' + str(DAYS)
                         ),
-                        'end':
-                        Regex(
+                        'start': Regex(
                             HH_MM_SS_REGEX,
-                            error=
-                            'Site hours: end time must be in HH:MM:SS format.'
+                            error='Site hours: start time must be in HH:MM:SS format.'
                         ),
-                        Optional('weight'):
-                        And(Or(int, float),
+                        'end': Regex(
+                            HH_MM_SS_REGEX,
+                            error='Site hours: end time must be in HH:MM:SS format.'
+                        ),
+                        Optional('weight'): And(
+                            Or(int, float),
                             lambda x: x > 0,
-                            error='Site hours: weight must be non-negative.')
+                            error='Site hours: weight must be non-negative.'
+                        )
                     }]
                 }
             }
         }
-    },
-    ignore_extra_keys=True)
+    }, ignore_extra_keys=True)
 
 PEOPLE_SCHEMA = Schema([{
-    'id':
-    str,
-    'campus':
-    str,
-    'cohort':
-    str,
-    'schedule':
-    Or({Regex(DATE_REGEX): [str]}, {},
-       error='People: schedule keys must be in YYYY-MM-DD format.'),
-    'site_rank':
-    Or([str], []),
+    'id': str,
+    'campus': str,
+    'cohort': str,
+    'schedule': Or(
+        {Regex(DATE_REGEX): [str]},
+        {},
+        error='People: schedule keys must be in YYYY-MM-DD format.'
+    ),
+    'site_rank': Or([str], []),
     Optional('last_test'): {
         'date': Regex(DATE_REGEX),
         'block': str
     }
-}],
-                       ignore_extra_keys=True)
+}], ignore_extra_keys=True)
+# yapf: enable
 
 
 def validate_config(config: Dict) -> Dict:
