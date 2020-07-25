@@ -1,0 +1,2077 @@
+{
+    "start": "2020-08-14",
+    "end": "2020-08-23",
+    "config": {
+        "Medford/Somerville": {
+            "policy": {
+                "blocks": {
+                    "Morning": {
+                        "start": "08:00:00",
+                        "end": "12:00:00"
+                    },
+                    "Afternoon": {
+                        "start": "12:00:00",
+                        "end": "16:00:00"
+                    },
+                    "Evening": {
+                        "start": "16:00:00",
+                        "end": "20:00:00"
+                    }
+                },
+                "cohorts": {
+                    "Students": {
+                        "interval": {
+                            "min": 1,
+                            "target": 3.5,
+                            "max": 5
+                        }
+                    },
+                    "High-frequency staff": {
+                        "interval": {
+                            "min": 1,
+                            "target": 3.5,
+                            "max": 5
+                        }
+                    },
+                    "Low-frequency staff": {
+                        "interval": {
+                            "min": 4,
+                            "target": 7,
+                            "max": 10
+                        }
+                    }
+                }
+            },
+            "sites": {
+                "51 Winthrop": {
+                    "n_lines": 20,
+                    "hours": [
+                        {"day": "Monday", "start": "08:00:00", "end": "20:00:00", "weight": 1.2},
+                        {"day": "Tuesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Wednesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Thursday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Friday", "start": "08:00:00", "end": "18:00:00"},
+                        {"day": "Saturday", "start": "10:00:00", "end": "18:00:00"},
+                        {"day": "Sunday", "start": "10:00:00", "end": "18:00:00"}
+                    ]
+                },
+                "Jackson Gym": {
+                    "n_lines": 15,
+                    "hours": [
+                        {"day": "Monday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Tuesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Wednesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Thursday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Friday", "start": "08:00:00", "end": "18:00:00"},
+                        {"day": "Saturday", "start": "10:00:00", "end": "18:00:00"},
+                        {"day": "Sunday", "start": "10:00:00", "end": "18:00:00"}
+                    ]
+                },
+                "Curtis Hall": {
+                   "n_lines": 10,
+                    "hours": [
+                        {"day": "Monday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Tuesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Wednesday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Thursday", "start": "08:00:00", "end": "20:00:00"},
+                        {"day": "Friday", "start": "08:00:00", "end": "18:00:00"},
+                        {"day": "Saturday", "start": "10:00:00", "end": "16:00:00"}
+                    ]
+                }
+            }
+        }
+    },
+    "people": [
+        {
+            "id": "uTZmKJyeNe",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "KsMqaKDwLv",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "bOXQsIeZOP",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "WosBKvDtpV",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "sfCPfOyMGG",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "ETGjkDOIpN",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "UOgTthMGzx",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "JXQKFKshan",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "CLnJeyLAbd",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "RfHjLNyNKq",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "eXbFPqMugM",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "GpsghdBIuR",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "vnMRSKDHaw",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "EnLcJHdIfa",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "oRFKMkwFxH",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "kVfOpZVCcn",
+            "campus": "Medford/Somerville",
+            "cohort": "High-frequency staff",
+            "schedule": {
+                "2020-08-19": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "xegeZNhTik",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "bTHIMmdwJW",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "NQCsafWKLF",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "fsmrHRxBpr",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "DFpRZNYCVR",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "RCcQEZyLAX",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "CiMZUOLpvZ",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "iWNiIIvxHf",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "vwbYoeGPpp",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "ZaBzuPhSai",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "mLXiPfTAbV",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "JyncwbzawS",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "YmmFsSKyib",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "sUOcTvkwzk",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "ZoCCqFWKcj",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "jcBuYbkLEZ",
+            "campus": "Medford/Somerville",
+            "cohort": "High-frequency staff",
+            "schedule": {
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "zbsdTGQCNW",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "aPlzqjVXmC",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "yBKrokFUxT",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "AtHiGgWEyg",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "STYKMFWsBs",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-19": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "jHivjNvtuE",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "McTYpdLKCd",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "vMIZjTfBjA",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "yaPrOCrnqx",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "YXQXvxzSXD",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "wsRWdYCuqZ",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "ZuJMOxotHj",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "TszXedFnwo",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "KRDAGTPWZV",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "TdhDVUtgVx",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "qVOuoeODcg",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "WrKlkGIenH",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "PpYdgdxXQM",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "EYxmoYPOfA",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "pkvGKgjxBz",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "IObKWZBZho",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "daqnWDfwTu",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "NGpPCYsnIb",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "yQdDjededn",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-18": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "iqDjIcsokb",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "WybMRWqGgO",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "bULgUpuRcA",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "myUtOYkjwx",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon"
+                ],
+                "2020-08-19": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "okwmggxOgZ",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-22": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "WLpKauKxEU",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-18": [
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "WYKbpmAvHz",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "vpxiADuejz",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-20": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "FTihCsqUYD",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-19": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "PrLgVCwgaT",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "AWFCypZnri",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "JsCUsVyAfC",
+            "campus": "Medford/Somerville",
+            "cohort": "High-frequency staff",
+            "schedule": {
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "aHNkDGfRho",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-20": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "51 Winthrop",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "TZSCFXCNot",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "tjFaXSLoDu",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-19": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "ekOmerZjKS",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-18": [
+                    "Morning"
+                ],
+                "2020-08-22": [
+                    "Afternoon",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "Curtis Hall",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "SPxXdSjPyV",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-21": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "QTbRhIpsgN",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Evening"
+                ],
+                "2020-08-23": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Curtis Hall",
+                "Jackson Gym"
+            ]
+        },
+        {
+            "id": "znTEMdFNaI",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning"
+                ],
+                "2020-08-19": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Morning"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "QkwFBlaSJY",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Afternoon"
+                ],
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon"
+                ],
+                "2020-08-20": [
+                    "Morning"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "qJdfKuYzuT",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-18": [
+                    "Morning",
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-23": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "Curtis Hall",
+                "Jackson Gym",
+                "51 Winthrop"
+            ]
+        },
+        {
+            "id": "hfMMDXHKNw",
+            "campus": "Medford/Somerville",
+            "cohort": "Students",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Evening"
+                ],
+                "2020-08-18": [
+                    "Afternoon",
+                    "Evening"
+                ],
+                "2020-08-20": [
+                    "Afternoon"
+                ],
+                "2020-08-21": [
+                    "Evening"
+                ],
+                "2020-08-22": [
+                    "Afternoon"
+                ]
+            },
+            "site_rank": [
+                "51 Winthrop",
+                "Jackson Gym",
+                "Curtis Hall"
+            ]
+        },
+        {
+            "id": "RutMhHPuQq",
+            "campus": "Medford/Somerville",
+            "cohort": "Low-frequency staff",
+            "schedule": {
+                "2020-08-17": [
+                    "Morning",
+                    "Evening"
+                ]
+            },
+            "site_rank": [
+                "Jackson Gym",
+                "51 Winthrop",
+                "Curtis Hall"
+            ]
+        }
+    ]
+}

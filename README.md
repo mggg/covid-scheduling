@@ -31,8 +31,6 @@ For example, to sample schedules for the week of Monday, August 17, 2020 using t
 python assign_json.py --config-file data/tufts.json --people-file data/tufts_sample_5000.json --out-file assign.json --start-date 2020-08-17 --end-date 2020-08-23
 ```
 
-**Note: the scheduler currently supports only weeklong intervals starting on a Monday. This is a known limitation and will be resolved shortly.**
-
 ## API
 To start the development server for the Flask-based JSON API, execute `FLASK_DEBUG=1 flask run`. The API accepts `POST` requests to the root endpoint of the format
 ```

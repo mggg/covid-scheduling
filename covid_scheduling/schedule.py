@@ -1,5 +1,6 @@
 """Campus block scheduling algorithms."""
 from typing import Dict, List, Tuple, Iterable
+from copy import deepcopy
 from collections import defaultdict
 from datetime import datetime, timedelta
 from itertools import combinations, product
@@ -55,6 +56,14 @@ def assign_schedules(config: Dict,
                               f'assignment window is {MAX_DAYS} days.')
     if n_days < 0:
         raise AssignmentError('Assignment window starts before it ends.')
+
+    # Filter personal schedules.
+    people = deepcopy(people)
+    for p in people:
+        p['schedule'] = {
+            date: blocks for date, blocks in p['schedule'].items()
+                         if start_date <= date <= end_date
+        }
 
     # Generate assignments for each campus individually.
     assignments = []
@@ -229,7 +238,7 @@ def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
                 block_hash = (block['start'], block['end'], block['site'])
                 uniq += list(block_hash)
             uniq_hash = tuple(uniq)
-            if uniq in schedule_ids:
+            if uniq_hash in schedule_ids:
                 with_ids.append({
                     'id': schedule_ids[uniq_hash],
                     'blocks': schedule

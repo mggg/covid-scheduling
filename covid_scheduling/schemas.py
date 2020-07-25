@@ -194,7 +194,7 @@ def validate_config(config: Dict) -> Dict:
                     max_time = block['end']
 
         # Add a dummy bounds field if necessary.
-        campus['bounds'] = campus.get('bounds', {})
+        campus['policy']['bounds'] = campus['policy'].get('bounds', {})
     return config
 
 

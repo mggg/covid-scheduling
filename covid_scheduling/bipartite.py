@@ -269,7 +269,7 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
                                               use_days)
         n_site_times = len(site_time_ids)
         site_times = np.zeros((n_schedules, n_site_times))
-        for cohort, schedules in schedules_by_cohort.items():
+        for schedules in schedules_by_cohort.values():
             for schedule in schedules:
                 sched_id = schedule['id']
                 for block in schedule['blocks']:

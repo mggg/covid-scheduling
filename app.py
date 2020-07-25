@@ -47,6 +47,7 @@ def schedule():
     except AssignmentError as ex:
         raise InvalidUsage(f'Assignment error: {ex.message}', 500)
     except Exception as ex:
+        raise ex
         raise InvalidUsage('Unknown assignment error.', 500)
     return jsonify({'people': assignments, 'stats': stats})
 
