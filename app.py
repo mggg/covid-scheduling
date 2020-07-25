@@ -45,9 +45,10 @@ def schedule():
         assignments, stats = assign_schedules(config, people, start_date,
                                               end_date)
     except AssignmentError as ex:
+        app.logger.error('Assignment error.', exc_info=True)
         raise InvalidUsage(f'Assignment error: {ex.message}', 500)
     except Exception as ex:
-        raise ex
+        app.logger.error('Unknown assignment error.', exc_info=True)
         raise InvalidUsage('Unknown assignment error.', 500)
     return jsonify({'people': assignments, 'stats': stats})
 
