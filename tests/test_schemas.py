@@ -92,7 +92,7 @@ def test_validate_config_datetime(config_simple):
 
 
 def test_validate_config_bounds(config_simple):
-    assert config_simple['bounds'] == {}
+    assert config_simple['policy']['bounds'] == {}
 
 
 def test_valiaate_people_baseline(people_simple_raw, config_simple_all):
@@ -146,8 +146,7 @@ def test_validate_people_schedule_datetime(people_simple, config_simple_all):
         assert isinstance(key, datetime)
 
 
-def test_validate_people_unique_ids(people_simple_raw,
-                                    config_simple_all):
+def test_validate_people_unique_ids(people_simple_raw, config_simple_all):
     people_simple_raw.append(deepcopy(people_simple_raw[0]))
     with pytest.raises(SchemaError):
         validate_people(people_simple_raw, config_simple_all)

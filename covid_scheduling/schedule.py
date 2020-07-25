@@ -61,8 +61,9 @@ def assign_schedules(config: Dict,
     people = deepcopy(people)
     for p in people:
         p['schedule'] = {
-            date: blocks for date, blocks in p['schedule'].items()
-                         if start_date <= date <= end_date
+            date: blocks
+            for date, blocks in p['schedule'].items()
+            if start_date <= date <= end_date
         }
 
     # Generate assignments for each campus individually.
