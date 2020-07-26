@@ -97,14 +97,17 @@ def test_validate_config_bounds(config_simple):
 
 def test_validate_config_bounds_min_mult(config_simple_raw):
     bounds = {
-        'day_load_tolerance': {'max': 1.25},
-        'block_load_tolerance': {'max': 1.25}
+        'day_load_tolerance': {
+            'max': 1.25
+        },
+        'block_load_tolerance': {
+            'max': 1.25
+        }
     }
     config_simple_raw['Campus']['policy']['bounds'] = bounds
     config = validate_config(config_simple_raw)
     for key in bounds:
         assert config['Campus']['policy']['bounds'][key]['min'] == 0
-
 
 
 def test_valiaate_people_baseline(people_simple_raw, config_simple_all):
