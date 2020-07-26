@@ -60,10 +60,15 @@ CONFIG_SCHEMA = Schema(
                 },
                 Optional('bounds'): {
                     Optional(Or('day_load_tolerance', 'block_load_tolerance')): {
+                        Optional('min'): And(
+                            Or(int, float),
+                            lambda x: 0 <= x <= 1,
+                            error='Bounds: minimum multiplier must be between 0 and 1.'
+                        ),
                         'max': And(
                             Or(int, float),
-                            lambda x: x >= 0,
-                            error='Bounds: maximum tolerance must be positive.'
+                            lambda x: x >= 1,
+                            error='Bounds: maximum multiplier must be at least 1.'
                          )
                     },
                     Optional('allow_site_splits'): bool
@@ -144,6 +149,8 @@ def validate_config(config: Dict) -> Dict:
     #  * For any site: no overlapping blocks on a given day.
     #  * All times should be `datetime` objects.
     #  * An empty `bounds` object if one does not already exist.
+    #  * Tolerance bounds have an implicit minimum multiplier of 0
+    #    if not otherwise specified.
     for campus in config.values():
         for cohort in campus['policy']['cohorts'].values():
             # TODO: Site ranking costs.
@@ -187,6 +194,13 @@ def validate_config(config: Dict) -> Dict:
 
         # Add a dummy bounds field if necessary.
         campus['policy']['bounds'] = campus['policy'].get('bounds', {})
+
+        # Tolerance bounds have an in implicit minimum of 0 if
+        # not otherwise specified.
+        for bound in ('day_load_tolerance', 'block_load_tolerance'):
+            if bound in campus['policy']['bounds']:
+                bound_min = campus['policy']['bounds'][bound].get('min', 0)
+                campus['policy']['bounds'][bound]['min'] = bound_min
     return config
 
 

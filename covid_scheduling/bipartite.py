@@ -264,7 +264,7 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
     total_demand = test_demand.sum()
 
     # Generic constraint for site-{block, day} tolerance.
-    def site_time_constraint(tol, use_days):
+    def site_time_constraint(min_mult, max_mult, use_days):
         weights, site_time_ids = site_weights(config, start_date, end_date,
                                               use_days)
         n_site_times = len(site_time_ids)
@@ -280,8 +280,8 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
                     site_times[sched_id, site_time_ids[time_hash]] = 1
 
         target_load = total_demand * weights
-        min_load = (1 - tol) * target_load
-        max_load = (1 + tol) * target_load
+        min_load = min_mult * target_load
+        max_load = max_mult * target_load
         for time_idx in range(n_site_times):
             demand = solver.Sum(site_times[i, time_idx] * schedule_counts[i]
                                 for i in range(n_schedules))
@@ -290,15 +290,13 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
 
     # Constraint: site-blocks are sufficiently load-balanced.
     if 'block_load_tolerance' in config['policy']['bounds']:
-        block_load_tol = (
-            config['policy']['bounds']['block_load_tolerance']['max'])
-        site_time_constraint(block_load_tol, use_days=False)
+        bound = config['policy']['bounds']['block_load_tolerance']
+        site_time_constraint(bound['min'], bound['max'], use_days=False)
 
     # Constraint: site-days are sufficiently load-balanced.
     if 'day_load_tolerance' in config['policy']['bounds']:
-        day_load_tol = (
-            config['policy']['bounds']['day_load_tolerance']['max'])
-        site_time_constraint(day_load_tol, use_days=True)
+        bound = config['policy']['bounds']['day_load_tolerance']
+        site_time_constraint(bound['min'], bound['max'], use_days=True)
 
 
 def condense_assignments(people: List, schedules: Dict,

@@ -45,9 +45,28 @@ def test_site_weights_ten_days_uniform(config_simple):
     assert np.all(np.abs(weights - (np.ones(10) / 10).reshape((10, 1))) < EPS)
 
 
-def test_site_weights_two_days_uniform(config_simple):
+def test_site_weights_two_days_uniform_use_blocks(config_simple):
     # start on a Friday, end on the next day
-    weights, _ = site_weights(config_simple, ts_parse('2020-08-14'),
-                              ts_parse('2020-08-15'))
+    weights, time_site_ids = site_weights(config_simple,
+                                          ts_parse('2020-08-14'),
+                                          ts_parse('2020-08-15'))
     assert weights.shape == (2, )
     assert np.all(np.abs(weights - (np.ones(2) / 2).reshape((2, 1))) < EPS)
+    assert time_site_ids == {
+        (ts_parse('2020-08-14T08:00:00'), 'Testing'): 0,
+        (ts_parse('2020-08-15T08:00:00'), 'Testing'): 1
+    }
+
+
+def test_site_weights_two_days_uniform_use_days(config_simple):
+    # start on a Friday, end on the next day
+    weights, time_site_ids = site_weights(config_simple,
+                                          ts_parse('2020-08-14'),
+                                          ts_parse('2020-08-15'),
+                                          use_days=True)
+    assert weights.shape == (2, )
+    assert np.all(np.abs(weights - (np.ones(2) / 2).reshape((2, 1))) < EPS)
+    assert time_site_ids == {
+        (ts_parse('2020-08-14T00:00:00'), 'Testing'): 0,
+        (ts_parse('2020-08-15T00:00:00'), 'Testing'): 1
+    }
