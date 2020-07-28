@@ -128,7 +128,7 @@ def assignment_stats(people: List, schedules: List, test_demand: np.ndarray,
 def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                     schedules: List, schedules_by_cohort: Dict,
                     test_demand: np.ndarray,
-                    cost_fn: Callable) -> Tuple[List[List], np.ndarray]:
+                    cost_fn: Callable) -> Tuple[np.ndarray, np.ndarray]:
     """Generates assignment and cost matrices.
 
     The matching problem is constrained by compatibility. A person's schedule
@@ -166,9 +166,8 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
 
     Returns:
         A tuple containing:
-            * The assignment matrix. This is a `list` of `list`s rather
-              than a `np.ndarray` to easily allow mixed typing between
-              `pywraplp.Variable` elements and integer elements.
+            * The assignment matrix (of mixed type---elements are either
+            integers or `pywraplp.Solver.IntVar` objects).
             * The cost matrix corresponding to the assignment matrix.
     """
     # Cache compatibility sets.
@@ -214,12 +213,12 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
             solver.Add(
                 solver.Sum(assignments[p_idx][j]
                            for j in range(n_schedules)) == 1)
-    return assignments, costs
+    return np.array(assignments), costs
 
 
 def add_schedule_counts(
         solver: pywraplp.Solver,
-        assignments: List[List]) -> List[pywraplp.Solver.IntVar]:
+        assignments: np.ndarray) -> List[pywraplp.Solver.IntVar]:
     """Adds an auxiliary schedule counts vector to the MIP.
 
     The schedule counts vector is used for load balancing; it could
@@ -240,11 +239,11 @@ def add_schedule_counts(
     schedule_counts = []
     n_people = len(assignments)
     n_schedules = len(assignments[0])
-    if assignments:
+    if assignments.size > 0:
         for i in range(n_schedules):
             sched_count = solver.IntVar(0, n_people, f'count{i}')
             schedule_counts.append(sched_count)
-            solver.Add(sched_count == solver.Sum(assignments[j][i]
+            solver.Add(sched_count == solver.Sum(assignments[j, i]
                                                  for j in range(n_people)))
     return schedule_counts
 
@@ -317,7 +316,7 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
 
 
 def condense_assignments(people: List, schedules: List,
-                         assignments: List) -> Dict[int, Union[int, None]]:
+                         assignments: np.ndarray) -> Dict[int, Union[int, None]]:
     """Converts an assignment matrix to an assignment map.
 
     The assignment matrix is extremely sparse; there is at most a single 1
@@ -338,8 +337,8 @@ def condense_assignments(people: List, schedules: List,
     for i, person in enumerate(people):
         condensed_assignment[i] = None
         for j, schedule in enumerate(schedules):
-            if (isinstance(assignments[i][j], pywraplp.Variable)
-                    and assignments[i][j].solution_value() == 1):
+            if (isinstance(assignments[i, j], pywraplp.Variable)
+                    and assignments[i, j].solution_value() == 1):
                 condensed_assignment[i] = j
                 break
     return condensed_assignment
