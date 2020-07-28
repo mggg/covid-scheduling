@@ -36,7 +36,7 @@ def assign_schedules(config: Dict,
     availability) are marked clearly with an error message.
 
     Args:
-        config: A validated university-level configuration.
+        config: A validated campus-level configuration.
         people: A validated roster of people.
         start_date: The first day of testing. Only date information is used.
         end_date: The last day of testing (inclusive).
@@ -127,9 +127,24 @@ def assign_schedules(config: Dict,
     return assignments, all_stats
 
 
-def format_assignments(people: List, schedules: Dict,
-                       assignments: Dict) -> List:
-    """Converts an assignment map to the proper JSON schema."""
+def format_assignments(people: List, schedules: List,
+                       assignments: Dict) -> List[Dict]:
+    """Converts an assignment map to the proper JSON schema.
+
+    We mimic the format of a person's input data: the `id`, `cohort`,
+    and `campus` fields are retained, and the `schedule` field is replaced with
+    the person's assigned schedule instead of all of the person's availability.
+    An `assigned` field is added; if `False`, an `error` field is also added.
+
+    Args:
+        people: The roster of people to assign.
+        schedules: The list of testing schedules people may be assigned to.
+        assignments: A dictionary mapping people (by index) to
+            either schedules (by index) or `None`.
+
+    Returns:
+        A roster of people with testing schedules or errors.
+    """
     person_assignments = []
     for person_idx, schedule_idx in assignments.items():
         person = people[person_idx]
@@ -140,6 +155,7 @@ def format_assignments(people: List, schedules: Dict,
         }
         if schedule_idx is None:
             assignment['assigned'] = False
+            assignment['schedule'] = {}
             assignment['error'] = 'Not enough availability.'
         else:
             schedule = schedules[schedule_idx]
@@ -158,7 +174,30 @@ def format_assignments(people: List, schedules: Dict,
 
 def schedule_blocks(config: Dict, start_date: datetime,
                     end_date: datetime) -> List:
-    """Enumerates schedule blocks in a date window."""
+    """Enumerates schedule blocks in a date window.
+
+    Schedule blocks are defined in the `blocks` field of a campus' `policy`
+    field. For now, we assume that the block schedule does not change
+    from day to day; howerver, the schedules of individual test sites can
+    be arbitrarily granular to enable finely regulated load balancing. Blocks
+    cannot span multiple days.
+
+    Blocks have the following fields:
+        * `date`: Midnight on the day the block is within. (`datetime`)
+        * `weekday`: The full name of the weekday the block is within. (`str`)
+        * `block`: The label of the block. (`str`)
+        * `start`: The start time of the block. (`datetime`)
+        * `end`: The end time of the block. (`datetime`)
+
+    Args:
+        config: The campus-level configuration.
+        start_date: The first day of testing. Only date information is used.
+        end_date: The last day of testing (inclusive).
+            Only date information is used.
+
+    Returns:
+        All blocks in the date window, sorted by start time.
+    """
     blocks = []
     window_days = (end_date - start_date).days + 1
     for day in range(window_days):
@@ -177,8 +216,24 @@ def schedule_blocks(config: Dict, start_date: datetime,
 
 
 def cohort_schedules(config: Dict, cohort: str, n_tests: int,
-                     blocks: List) -> List:
-    """Enumerates possible schedules for a cohort."""
+                     blocks: List) -> List[Tuple]:
+    """Enumerates possible schedules for a cohort.
+
+    A cohort requires `n_tests` per person, usually with a minimum and
+    maximum time interval. We enumerate all block combinations of length
+    `n_tests` and filter the combinations that fail to meet the constraints.
+
+    Args:
+        config: The campus-level configuration (contains testing interval
+            constraints).
+        cohort: The name of the cohort.
+        n_tests: The number of tests required in each schedule.
+        blocks: The blocks to build the schedules from (typically generated
+            with `schedule_blocks`).
+
+    Returns:
+        A list of all valid schedules. Each schedule is a tuple of blocks.
+    """
     min_interval_sec = (SEC_PER_DAY *
                         config['policy']['cohorts'][cohort]['interval']['min'])
     max_interval_sec = (SEC_PER_DAY *
@@ -197,10 +252,46 @@ def cohort_schedules(config: Dict, cohort: str, n_tests: int,
     return schedules
 
 
-def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[List]:
+def add_sites_to_schedules(schedules: List[Tuple], config: Dict) -> List[List]:
     """Augments a list of schedules with site permutations.
 
-    For a particular schedule, we can 
+    We consider two primary dimensions when scheduling: *when* a person
+    gets tested and *where* a person gets tested. Just as people have
+    preferred testing times, they may have preferred testing sites
+    depending on the locations of their dormitories and classroom buildings.
+    Each test site typically has distinct hours and capacities. Thus,
+    it is useful to consider schedules with the same blocks but different
+    testing sites separately.
+
+    Given a list of schedules (typically generated with `cohort_schedules`),
+    we can make a schedule site-specific in two ways:
+        1. For each site, generate a copy of the schedule with *all* blocks
+           assigned to the same site. For each schedule, this yields a set of
+           augmented schedules with size linear in the number of sites.
+        2. For each schedule, enumerate all Cartesian products of sites with
+           the length of the schedule---that is, allow the site to vary across
+           appointments for each schedule. For each schedule, this yields a set
+           of augmented schedules with size exponential in the number of sites.
+           This is feasible for a small number of sites.
+
+    By default, we choose the former. Preventing schedules from splitting
+    across sites is not just more computationally tractable; the schedules
+    this method produces are more user-friendly, as switching between testing
+    sites in the same (short) time interval is annoying. However, we retain
+    support for the latter. It can be enabled by setting `allow_site_splits` to
+    `True` in the configuration's `bounds` field.
+
+    In either case, we filter out infeasible schedules. If a schedule contains
+    a block assigned to a site that is not actually open during that block,
+    then the entire schedule is invalid. (If a site is only partially open
+    during an assigned block, the schedule is still valid.)
+
+    Args:
+        schedules: The schedules to augment.
+        config: The campus-level configuration, which includes site data.
+
+    Returns:
+        A list of site-augmented schedules.
     """
     site_schedules = []
     sites = config['sites'].keys()
@@ -243,10 +334,26 @@ def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[List]:
     return site_schedules
 
 
-def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
-    """Assigns a canonical ordering to unique schedules across cohorts."""
+def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[List, Dict]:
+    """Assigns a canonical ordering to unique schedules across cohorts.
+
+    Multiple cohorts may share the same schedule. In order to minimize the size
+    of the assignment problem, we assign an ID to each unique schedule.
+
+    Args:
+        schedules_by_cohort: A dictionary with cohort names as the keys and
+            lists of schedules as the values.
+
+    Returns:
+        A tuple containing:
+            * A list of unique schedules, indexed by schedule IDs.
+            * A modified version of `schedules_by_cohort`. Each schedule
+              is replaced with a wrapper dictionary with an `id` field
+              (the unique ID of the schedule) and a `blocks` field
+              (the original schedule data).
+    """
     schedule_ids: Dict[Tuple, int] = {}
-    schedules_by_id = {}
+    schedules_by_id = []
     schedules_by_cohort_with_id = {}
     sched_id = 0
     for cohort, schedules in schedules_by_cohort.items():
@@ -264,7 +371,7 @@ def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
                 })
             else:
                 schedule_ids[uniq_hash] = sched_id
-                schedules_by_id[sched_id] = schedule
+                schedules_by_id.append(schedule)
                 with_ids.append({'id': sched_id, 'blocks': schedule})
                 sched_id += 1
         schedules_by_cohort_with_id[cohort] = with_ids

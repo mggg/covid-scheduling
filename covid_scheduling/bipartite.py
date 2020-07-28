@@ -8,7 +8,7 @@ from covid_scheduling.load_balancing import site_weights
 
 
 def bipartite_assign(config: Dict, people: List, start_date: datetime,
-                     end_date: datetime, schedules: Dict,
+                     end_date: datetime, schedules: List,
                      schedules_by_cohort: Dict, test_demand: np.ndarray,
                      cost_fn: Callable) -> Tuple[Dict, List]:
     """Assigns people to schedules using bipartite maching.
@@ -30,7 +30,8 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
         config: The campus-level configuration.
         people: The roster of people to match.
         start_date: The first day of testing. Only date information is used.
-        end_date: The last day of testing. Only date information is used.
+        end_date: The last day of testing, inclusive.
+            Only date information is used.
         schedules: Schedules by unique ID (starting at 0).
         schedules_by_cohort: Schedules grouped by cohort compatibility;
             some may be duplicates. Each schedule should be in the form
@@ -100,7 +101,7 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
                           f'infeasible or unbounded (status code {status}).')
 
 
-def assignment_stats(people: List, schedules: Dict, test_demand: np.ndarray,
+def assignment_stats(people: List, schedules: List, test_demand: np.ndarray,
                      costs: np.ndarray, assignment: Dict) -> List:
     """Computes basic statistics about the assignment."""
     stats: List = []
@@ -125,7 +126,7 @@ def assignment_stats(people: List, schedules: Dict, test_demand: np.ndarray,
 
 
 def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
-                    schedules: Dict, schedules_by_cohort: Dict,
+                    schedules: List, schedules_by_cohort: Dict,
                     test_demand: np.ndarray,
                     cost_fn: Callable) -> Tuple[List[List], np.ndarray]:
     """Generates assignment and cost matrices.
@@ -173,11 +174,11 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
     # Cache compatibility sets.
     testing_blocks = {
         idx: set((s['date'], s['block']) for s in sched)
-        for idx, sched in schedules.items()
+        for idx, sched in enumerate(schedules)
     }
     testing_sites = {
         idx: set(s['site'] for s in sched)
-        for idx, sched in schedules.items()
+        for idx, sched in enumerate(schedules)
     }
     people_sites = [set(person['site_rank']) for person in people]
     people_blocks = []
@@ -252,7 +253,28 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
                        schedules_by_cohort: Dict, schedule_counts: List,
                        test_demand: np.ndarray, start_date: datetime,
                        end_date: datetime) -> None:
-    """Adds load balancing constraints (day- and/or block-level) to the MIP."""
+    """Adds load balancing constraints (day- and/or block-level) to the MIP.
+
+    The `bounds` field in a campus configuration may contain a site-day load
+    balancing constraint in the `site_day_tolerance` field and a site-block
+    load balancing cosntraint in the `site_block_tolerance` field.
+
+    Args:
+        solver: The MIP solver to add load balancing constraints to.
+        campus: The campus-level configuration.
+        people: The roster of people to assign.
+        schedules_by_cohort: Testing schedules by cohort compatibility.
+        schedule_counts: A list of MIP variables indicating the number
+            of people assigned to each unique schedule (should be created
+            with `add_schedule_counts`).
+        test_demand: Number of tests required by each person.
+        start_date: The first day of testing. Only date information is used.
+        end_date: The last day of testing, inclusive.
+            Only date information is used.
+
+    Returns:
+        Nothing. The state of `solver` is modified (constraints are added).
+    """
     # Determine total testing demand.
     n_people = len(people)
     n_schedules = len(schedule_counts)
@@ -294,9 +316,24 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
         site_time_constraint(bound['min'], bound['max'], use_days=True)
 
 
-def condense_assignments(people: List, schedules: Dict,
+def condense_assignments(people: List, schedules: List,
                          assignments: List) -> Dict[int, Union[int, None]]:
-    """Converts an assignment matrix to an assignment map."""
+    """Converts an assignment matrix to an assignment map.
+
+    The assignment matrix is extremely sparse; there is at most a single 1
+    entry in each row. For external purposes, it is best to convert the
+    assignment matrix to a dictionary mapping people indices to schedule
+    indices. If a person is not assigned to a schedule, their index should
+    map to `None` instead.
+
+    Args:
+        people: The roster of assigned people.
+        schedule: The schedules people are assigned to.
+        assignments: The person-testing schedule assignment matrix.
+
+    Returns:
+        The person-testing schedule assignment map.
+    """
     condensed_assignment: Dict[int, Union[int, None]] = {}
     for i, person in enumerate(people):
         condensed_assignment[i] = None
