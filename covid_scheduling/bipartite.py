@@ -315,8 +315,9 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
         site_time_constraint(bound['min'], bound['max'], use_days=True)
 
 
-def condense_assignments(people: List, schedules: List,
-                         assignments: np.ndarray) -> Dict[int, Union[int, None]]:
+def condense_assignments(
+        people: List, schedules: List,
+        assignments: np.ndarray) -> Dict[int, Union[int, None]]:
     """Converts an assignment matrix to an assignment map.
 
     The assignment matrix is extremely sparse; there is at most a single 1
