@@ -1,53 +1,68 @@
 """Campus block scheduling algorithms."""
-from typing import Dict, List, Tuple, Iterable
+from typing import Dict, List, Tuple, Callable, Iterable
 from copy import deepcopy
 from collections import defaultdict
 from datetime import datetime, timedelta
 from itertools import combinations, product
 import numpy as np  # type: ignore
+from covid_scheduling.costs import schedule_cost
 from covid_scheduling.errors import AssignmentError
 from covid_scheduling.bipartite import bipartite_assign
-from covid_scheduling.constants import DAYS, SEC_PER_DAY, MIDNIGHT
+from covid_scheduling.constants import SEC_PER_DAY, MIDNIGHT
 
 MAX_DAYS = 14
 MAX_TESTS = 2
 ASSIGNMENT_METHODS = {'bipartite': bipartite_assign}
 
 
-def schedule_cost(schedule: List[Dict], person: Dict,
-                  target_interval: float) -> float:
-    """Computes the cost (spacing + site) of a schedule.
-
-    Currently, we use the sum of squared deviations from the target
-    testing interval.
-    """
-    # TODO: Site ranking costs.
-    # TODO: Spacing history costs.
-    cost = 0
-    for left_b, right_b in zip(schedule[:-1], schedule[1:]):
-        delta_sec = (right_b['start'] - left_b['start']).total_seconds()
-        cost += ((delta_sec / SEC_PER_DAY) - target_interval)**2
-    return cost
-
-
 def assign_schedules(config: Dict,
                      people: List,
                      start_date: datetime,
                      end_date: datetime,
-                     method: str = 'bipartite') -> Tuple[List, List]:
+                     method: str = 'bipartite',
+                     cost_fn: Callable = schedule_cost) -> Tuple[List, List]:
     """Assigns people to testing schedules.
+
+    We enumerate the possible testing schedules based on the configuration's
+    block schedule, site availability, and testing interval constraints.
+    We then solve the person-schedule matching problem using the specified
+    method; in particular, we seek an assignment that minimizes the total
+    matching cost, where the cost of matching a person with a testing schedule
+    is determined by `cost_fn`. This matching problem may also be subject
+    to side constraints, such as site-day and site-block load balancing.
+
+    Matches are returned in a schema similar to the person roster's
+    schema; any unsuccessful matches (which typically occur due to lack of
+    availability) are marked clearly with an error message.
 
     Args:
         config: A validated university-level configuration.
         people: A validated roster of people.
-        start_date: The first day in the assignment range.
-        end_date: The first day in the assignment range (inclusive).
+        start_date: The first day of testing. Only date information is used.
+        end_date: The last day of testing (inclusive).
+            Only date information is used.
         method: The assignment algorithm to use (only bipartite
             matching is available; heuristic algorithms may be
             added in the future).
+        cost_fn: A function which expects a person, a schedule, and a target
+            testing interval (in days) and returns a `float` indicating
+            the cost of matching the person with the testing schedule.
+            In practice, this function should use information about the
+            schedule's testing interval, the person's site preferences,
+            and the person's testing history. This function does _not_
+            need to determine if the person's schedule is compatible
+            with the testing schedule; this is handled internally
+            by the assignment algorithms.
 
     Returns:
         Testing schedules for each person (with warnings).
+
+    Raises:
+        AssignmentError:
+            * When the testing window is too long or starts before it ends.
+            * When the specified `method` does not exist.
+            * When the assignment problem is invalid with respect to the
+              `method` chosen.
     """
     n_days = (end_date - start_date).days + 1
     if n_days >= MAX_DAYS:
@@ -59,11 +74,11 @@ def assign_schedules(config: Dict,
 
     # Filter personal schedules.
     people = deepcopy(people)
-    for p in people:
-        p['schedule'] = {
+    for person in people:
+        person['schedule'] = {
             date: blocks
-            for date, blocks in p['schedule'].items()
-            if start_date <= date <= end_date
+            for date, blocks in person['schedule'].items()
+            if start_date <= date < (end_date + timedelta(days=1))
         }
 
     # Generate assignments for each campus individually.
@@ -106,7 +121,7 @@ def assign_schedules(config: Dict,
                                      schedules=schedules,
                                      schedules_by_cohort=schedules_by_cohort,
                                      test_demand=demand,
-                                     cost_fn=schedule_cost)
+                                     cost_fn=cost_fn)
         assignments += format_assignments(people, schedules, condensed)
         all_stats += stats
     return assignments, all_stats
@@ -183,7 +198,10 @@ def cohort_schedules(config: Dict, cohort: str, n_tests: int,
 
 
 def add_sites_to_schedules(schedules: List[Dict], config: Dict) -> List[List]:
-    """Augments a list of schedules with site permutations."""
+    """Augments a list of schedules with site permutations.
+
+    For a particular schedule, we can 
+    """
     site_schedules = []
     sites = config['sites'].keys()
     default_day = {'year': 2020, 'month': 9, 'day': 1}
@@ -254,7 +272,19 @@ def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[Dict, Dict]:
 
 
 def testing_demand(config: Dict, people: List, n_tests: Dict) -> np.ndarray:
-    """Calculates testing demand for each person."""
+    """Calculates testing demand for each person based on cohort.
+
+    Args:
+        config: The campus-level configuration.
+        people: The roster of people to calculate testing demand for.
+        n_tests: The number of tests demanded by each cohort for a chosen
+            time period. Each cohort should be assigned a positive
+            integer number of tests.
+
+    Returns:
+        A vector with each person's testing demand.  The testing demand vector
+            matches the order of the roster.
+    """
     cohort_counts: Dict = defaultdict(int)
     n_people = len(people)
     test_demand = np.zeros(n_people, dtype=np.int)

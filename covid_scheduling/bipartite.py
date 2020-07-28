@@ -42,12 +42,7 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
             person. Usually, a person's test demand is based entirely on
             their cohort, but we may need to support cases with individual
             exceptions.
-        cost_fn: A function which expects a person, a schedule, and a target
-            testing interval (in days) and returns a `float` indicating
-            the cost of matching the person with the testing schedule.
-            In practice, this function should use information about the
-            schedule's testing interval, the person's site preferences,
-            and the person's testing history.
+        cost_fn: The matching cost function.
 
     Returns:
         A tuple containing:
