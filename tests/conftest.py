@@ -1,7 +1,8 @@
 """"Common fixtures for unit tests."""
 import pytest
+from datetime import timedelta
 from dateutil.parser import parse as ts_parse
-from covid_scheduling.constants import DAYS
+from covid_scheduling.constants import DAYS, MIDNIGHT
 from covid_scheduling.schemas import validate_people, validate_config
 
 
@@ -96,3 +97,38 @@ def people_simple_raw():
 def people_simple(people_simple_raw, config_simple_all):
     """A validated one-person roster defined wrt the `config_simple` fixture"""
     return validate_people(people_simple_raw, config_simple_all)
+
+
+@pytest.fixture
+def schedules_by_cohort_one_cohort(config_simple):
+    block = config_simple['policy']['blocks']['Block']
+    date = block['start'].replace(**MIDNIGHT)
+    return {
+        'Cohort': [[{
+            'date': date + timedelta(days=day),
+            'start': block['start'] + timedelta(days=day),
+            'end': block['end'] + timedelta(days=day),
+            'block': 'Block',
+            'weekday': date.strftime('%A'),
+            'site': 'Testing'
+        }] for day in range(7)]
+    }
+
+
+@pytest.fixture
+def schedules_by_cohort_full_dupes(schedules_by_cohort_one_cohort):
+    return {
+        'Cohort1': schedules_by_cohort_one_cohort['Cohort'],
+        'Cohort2': schedules_by_cohort_one_cohort['Cohort']
+    }
+
+
+@pytest.fixture
+def schedules_by_cohort_partial_dupes(schedules_by_cohort_one_cohort):
+    one_indices = [0, 2, 4, 6]  # every other day
+    two_indices = [0, 3, 6]  # every three days
+    orig = schedules_by_cohort_one_cohort['Cohort']
+    return {
+        'Cohort1': [orig[idx] for idx in one_indices],
+        'Cohort2': [orig[idx] for idx in two_indices]
+    }

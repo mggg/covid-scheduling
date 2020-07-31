@@ -5,7 +5,8 @@ from collections import defaultdict
 from dateutil.parser import parse as ts_parse
 from covid_scheduling.constants import DAYS
 from covid_scheduling.schedule import (schedule_blocks, cohort_schedules,
-                                       add_sites_to_schedules, schedule_cost)
+                                       add_sites_to_schedules, schedule_cost,
+                                       schedule_ordering)
 
 EPS = 1e-8
 SECS_PER_DAY = 60 * 60 * 24
@@ -164,4 +165,37 @@ def test_add_sites_to_schedules_single_block_day_one_test(config_simple):
     ]]
 
 
-# TODO: More of add_sites_to_schedules(), compatible()
+def _by_s(v):
+    return v[0]['start']
+
+
+def test_schedule_ordering_one_cohort(schedules_by_cohort_one_cohort):
+    by_id, with_id = schedule_ordering(schedules_by_cohort_one_cohort)
+    assert (sorted(by_id, key=_by_s) == sorted(
+        schedules_by_cohort_one_cohort['Cohort'], key=_by_s))
+    assert len(with_id['Cohort']) == len(
+        schedules_by_cohort_one_cohort['Cohort'])
+    for sched in with_id['Cohort']:
+        assert sched['blocks'] == by_id[sched['id']]
+
+
+def test_schedule_ordering_full_dupes(schedules_by_cohort_full_dupes):
+    by_id, with_id = schedule_ordering(schedules_by_cohort_full_dupes)
+    assert (sorted(by_id, key=_by_s) == sorted(
+        schedules_by_cohort_full_dupes['Cohort1'], key=_by_s) == sorted(
+            schedules_by_cohort_full_dupes['Cohort2'], key=_by_s))
+    for cohort in ('Cohort1', 'Cohort2'):
+        for sched in with_id[cohort]:
+            assert sched['blocks'] == by_id[sched['id']]
+
+
+def test_schedule_ordering_partial_dupes(schedules_by_cohort_partial_dupes):
+    by_id, with_id = schedule_ordering(schedules_by_cohort_partial_dupes)
+    co1_start = set(s[0]['start']
+                    for s in schedules_by_cohort_partial_dupes['Cohort1'])
+    co2_start = set(s[0]['start']
+                    for s in schedules_by_cohort_partial_dupes['Cohort2'])
+    assert set(s[0]['start'] for s in by_id) == co1_start.union(co2_start)
+    for cohort in ('Cohort1', 'Cohort2'):
+        for sched in with_id[cohort]:
+            assert sched['blocks'] == by_id[sched['id']]
