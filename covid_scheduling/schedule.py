@@ -86,18 +86,7 @@ def assign_schedules(config: Dict,
     all_stats = []
     for campus, campus_config in config.items():
         # Enumerate schedules by cohort.
-        # We assume that each person demands at least one test, regardless
-        # of their cohort's target interval--otherwise, there would be little
-        # point in requesting a new schedule. We estimate the number of tests
-        # for each cohort using the cohort's target interval, applying an upper
-        # bound of `MAX_TESTS` to avoid combinatorial explosion in
-        # adversarial cases.
-        n_tests = {
-            name: min(max(int(round(n_days / data['interval']['target'])), 1),
-                      MAX_TESTS)
-            for name, data in campus_config['policy']['cohorts'].items()
-        }
-
+        n_tests = cohort_tests(campus_config, n_days)
         blocks = schedule_blocks(campus_config, start_date, end_date)
         schedules_by_cohort = {
             co: add_sites_to_schedules(
@@ -170,6 +159,31 @@ def format_assignments(people: List, schedules: List,
             assignment['schedule'] = dict(schedule_by_date)
         person_assignments.append(assignment)
     return person_assignments
+
+
+def cohort_tests(config: Dict, n_days: int) -> Dict[str, int]:
+    """Determines the number of tests required per person for all cohorts.
+
+    The number of tests required for a person in a cohort is approximately the
+    number of testing days divided by the cohort's target testing interval.
+    We assume that each person demands at least one test, regardless of their
+    cohort's target interval--otherwise, there would be little point in
+    requesting a new schedule. We estimate the number of tests for each cohort
+    using the cohort's target interval, applying an upper bound of `MAX_TESTS`
+    to avoid combinatorial explosion in adversarial cases.
+
+    Args:
+        config: The campus-level configuration.
+        n_days: The number of days of testing.
+
+    Returns:
+        A dictionary mapping each cohort to a positive integer number of tests.
+    """
+    return {
+        name: min(max(int(round(n_days / data['interval']['target'])), 1),
+                  MAX_TESTS)
+        for name, data in config['policy']['cohorts'].items()
+    }
 
 
 def schedule_blocks(config: Dict, start_date: datetime,

@@ -101,6 +101,7 @@ def people_simple(people_simple_raw, config_simple_all):
 
 @pytest.fixture
 def schedules_by_cohort_one_cohort(config_simple):
+    """A listing of schedules (each with one appointment) for one cohort."""
     block = config_simple['policy']['blocks']['Block']
     date = block['start'].replace(**MIDNIGHT)
     return {
@@ -117,6 +118,7 @@ def schedules_by_cohort_one_cohort(config_simple):
 
 @pytest.fixture
 def schedules_by_cohort_full_dupes(schedules_by_cohort_one_cohort):
+    """Two cohorts with completely redundant schedules."""
     return {
         'Cohort1': schedules_by_cohort_one_cohort['Cohort'],
         'Cohort2': schedules_by_cohort_one_cohort['Cohort']
@@ -125,6 +127,7 @@ def schedules_by_cohort_full_dupes(schedules_by_cohort_one_cohort):
 
 @pytest.fixture
 def schedules_by_cohort_partial_dupes(schedules_by_cohort_one_cohort):
+    """Two cohorts with partially redundant chedules."""
     one_indices = [0, 2, 4, 6]  # every other day
     two_indices = [0, 3, 6]  # every three days
     orig = schedules_by_cohort_one_cohort['Cohort']

@@ -6,7 +6,10 @@ from dateutil.parser import parse as ts_parse
 from covid_scheduling.constants import DAYS
 from covid_scheduling.schedule import (schedule_blocks, cohort_schedules,
                                        add_sites_to_schedules, schedule_cost,
-                                       schedule_ordering)
+                                       schedule_ordering, cohort_tests,
+                                       MAX_TESTS)
+# Avoid pytest conflicts.
+from covid_scheduling.schedule import testing_demand as demand_for_tests
 
 EPS = 1e-8
 SECS_PER_DAY = 60 * 60 * 24
@@ -199,3 +202,72 @@ def test_schedule_ordering_partial_dupes(schedules_by_cohort_partial_dupes):
     for cohort in ('Cohort1', 'Cohort2'):
         for sched in with_id[cohort]:
             assert sched['blocks'] == by_id[sched['id']]
+
+
+def test_cohort_tests():
+    config = {
+        'policy': {
+            'cohorts': {
+                'every day': {
+                    'interval': {
+                        'target': 1
+                    }
+                },
+                'every 2 days': {
+                    'interval': {
+                        'target': 2
+                    }
+                },
+                'every 3 days': {
+                    'interval': {
+                        'target': 3
+                    }
+                },
+                'twice a week': {
+                    'interval': {
+                        'target': 3.5
+                    }
+                },
+                'every week': {
+                    'interval': {
+                        'target': 7
+                    }
+                },
+                'every 2 weeks': {
+                    'interval': {
+                        'target': 14
+                    }
+                }
+            }
+        }
+    }
+    test_counts = cohort_tests(config, 7)
+    assert test_counts == {
+        'every day': min(MAX_TESTS, 7),
+        'every 2 days': min(MAX_TESTS, 4),
+        'every 3 days': min(MAX_TESTS, 2),
+        'twice a week': min(MAX_TESTS, 2),
+        'every week': 1,
+        'every 2 weeks': 1
+    }
+
+
+def test_testing_demand_one_cohort(config_simple, people_simple):
+    extended_people = 5 * people_simple
+    demand = demand_for_tests(config_simple, extended_people, {'People': 3})
+    assert np.all(demand == 3 * np.ones(5, dtype=np.int))
+
+
+def test_testing_demand_two_cohorts(config_simple, people_simple):
+    person_one = people_simple[0]
+    person_two = person_one.copy()
+    person_two['cohort'] = 'People2'
+    extended_people = (5 * [person_one]) + (5 * [person_two])
+    expected = np.ones(10, dtype=np.int)
+    expected[:5] = 3
+    expected[5:] = 4
+    demand = demand_for_tests(config_simple, extended_people, {
+        'People': 3,
+        'People2': 4
+    })
+    assert np.all(expected == demand)
