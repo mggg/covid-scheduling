@@ -117,6 +117,11 @@ def schedules_by_cohort_one_cohort(config_simple):
 
 
 @pytest.fixture
+def schedules_by_id_one_cohort(schedules_by_cohort_one_cohort):
+    return schedules_by_cohort_one_cohort['Cohort']
+
+
+@pytest.fixture
 def schedules_by_cohort_full_dupes(schedules_by_cohort_one_cohort):
     """Two cohorts with completely redundant schedules."""
     return {

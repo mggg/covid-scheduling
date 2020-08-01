@@ -7,7 +7,7 @@ from covid_scheduling.constants import DAYS
 from covid_scheduling.schedule import (schedule_blocks, cohort_schedules,
                                        add_sites_to_schedules, schedule_cost,
                                        schedule_ordering, cohort_tests,
-                                       MAX_TESTS)
+                                       format_assignments, MAX_TESTS)
 # Avoid pytest conflicts.
 from covid_scheduling.schedule import testing_demand as demand_for_tests
 
@@ -271,3 +271,75 @@ def test_testing_demand_two_cohorts(config_simple, people_simple):
         'People2': 4
     })
     assert np.all(expected == demand)
+
+
+def test_format_assignments_one_person(schedules_by_id_one_cohort,
+                                       people_simple):
+    assignments = format_assignments(people_simple, schedules_by_id_one_cohort,
+                                     {0: 0})
+    person = people_simple[0]
+    schedule = schedules_by_id_one_cohort[0]
+    by_date = {
+        schedule[0]['date'].strftime('%Y-%m-%d'): [{
+            'block':
+            schedule[0]['block'],
+            'site':
+            schedule[0]['site']
+        }]
+    }
+    assert assignments == [{
+        'id': person['id'],
+        'cohort': person['cohort'],
+        'campus': person['campus'],
+        'assigned': True,
+        'schedule': by_date
+    }]
+
+
+def test_format_assignments_one_person_error(schedules_by_id_one_cohort,
+                                             people_simple):
+    assignments = format_assignments(people_simple, schedules_by_id_one_cohort,
+                                     {0: None})
+    person = people_simple[0]
+    assert assignments == [{
+        'id': person['id'],
+        'cohort': person['cohort'],
+        'campus': person['campus'],
+        'assigned': False,
+        'error': 'Not enough availability.',
+        'schedule': {}
+    }]
+
+
+def test_format_assignments_one_person_missing(schedules_by_id_one_cohort,
+                                               people_simple):
+    assignments = format_assignments(people_simple, schedules_by_id_one_cohort,
+                                     {})
+    assert assignments == []
+
+
+def test_format_assignments_multiple_people(schedules_by_id_one_cohort,
+                                            people_simple):
+    person_one = people_simple[0].copy()
+    person_two = people_simple[0].copy()
+    person_two['id'] = 'b'
+    people = [person_one, person_two]
+    schedules_by_date = [{
+        schedule[0]['date'].strftime('%Y-%m-%d'): [{
+            'block':
+            schedule[0]['block'],
+            'site':
+            schedule[0]['site']
+        }]
+    } for schedule in schedules_by_id_one_cohort[:2]]
+    assignments = format_assignments(people, schedules_by_id_one_cohort, {
+        0: 0,
+        1: 1
+    })
+    assert assignments == [{
+        'id': person['id'],
+        'cohort': person['cohort'],
+        'campus': person['campus'],
+        'assigned': True,
+        'schedule': schedule
+    } for person, schedule in zip(people, schedules_by_date)]
