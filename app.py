@@ -8,7 +8,6 @@ from covid_scheduling import (validate_people, validate_config,
 from celery import Celery
 from celery.utils.log import get_task_logger
 
-
 app = Flask(__name__)
 
 
@@ -16,12 +15,10 @@ app = Flask(__name__)
 # https://flask.palletsprojects.com/en/1.1.x/patterns/celery/
 def make_celery(app):
     """Initializes Celery with Flask context."""
-    celery = Celery(
-        app.import_name,
-        backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL'],
-        task_track_started=app.config['CELERY_TRACK_STARTED']
-    )
+    celery = Celery(app.import_name,
+                    backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'],
+                    task_track_started=app.config['CELERY_TRACK_STARTED'])
     celery.conf.update(app.config)
 
     class ContextTask(celery.Task):
@@ -32,35 +29,42 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-app.config.update(
-    CELERY_BROKER_URL=os.getenv('REDIS_URL', ''),
-    CELERY_RESULT_BACKEND=os.getenv('REDIS_URL', ''),
-    CELERY_TRACK_STARTED=True
-)
+
+app.config.update(CELERY_BROKER_URL=os.getenv('REDIS_URL', ''),
+                  CELERY_RESULT_BACKEND=os.getenv('REDIS_URL', ''),
+                  CELERY_TRACK_STARTED=True)
 celery = make_celery(app)
 task_logger = get_task_logger(__name__)
 
 
 @celery.task(bind=True)
 def run_scheduler(self, body):
-    params = parse_request(body)
+    # Load request.
     try:
-        assignments, stats = assign_schedules(
-            params['config'],
-            params['people'],
-            params['start_date'],
-            params['end_date']
-        )
+        params = parse_request(body)
+    except InvalidUsage as ex:
+        task_logger.error(f'Schema error: {ex.message}', exc_info=True)
+        self.update_state(state='FAILURE',
+                          meta={'error': f'Schema error: {ex.message}'})
+    except Exception:
+        task_logger.error('Unknown schema error.', exc_info=True)
+        self.update_state(state='FAILURE',
+                          meta={'error': 'Unknowh schema error.'})
+
+    # Generate assignments.
+    try:
+        assignments, stats = assign_schedules(params['config'],
+                                              params['people'],
+                                              params['start_date'],
+                                              params['end_date'])
     except AssignmentError as ex:
         task_logger.error('Assignment error.', exc_info=True)
-        self.update_state(state='FAILURE', meta={
-            'error': f'Assignment error: {ex.message}'
-        })
+        self.update_state(state='FAILURE',
+                          meta={'error': f'Assignment error: {ex.message}'})
     except Exception as ex:
         task_logger.error('Unknown assignment error.', exc_info=True)
-        self.update_state(state='FAILURE', meta={
-            'error': 'Unknown assignment error.'
-        })
+        self.update_state(state='FAILURE',
+                          meta={'error': 'Unknown assignment error.'})
     return {'people': assignments, 'stats': stats}
 
 
@@ -73,12 +77,10 @@ def schedule():
     params = parse_request(body)
 
     try:
-        assignments, stats = assign_schedules(
-            params['config'],
-            params['people'],
-            params['start_date'],
-            params['end_date']
-        )
+        assignments, stats = assign_schedules(params['config'],
+                                              params['people'],
+                                              params['start_date'],
+                                              params['end_date'])
     except AssignmentError as ex:
         app.logger.error('Assignment error.', exc_info=True)
         raise InvalidUsage(f'Assignment error: {ex.message}', 500)
@@ -94,7 +96,6 @@ def start_job():
     if not request.is_json:
         raise InvalidUsage('Expected content-type is application/json.')
     body = request.get_json()
-    parse_request(body)  # Validate configuration before starting job.
     task = run_scheduler.delay(body)
     return jsonify({'status': 'pending', 'id': task.id})
 
@@ -173,6 +174,7 @@ def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
 
 if __name__ == '__main__':
     app.run(threaded=True, port=5000)
