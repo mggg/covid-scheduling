@@ -40,6 +40,33 @@ def test_validate_config_testing_interval_default_min(config_simple_raw):
     assert min_interval == 0
 
 
+def test_validate_config_cohort_fallback_valid(config_simple_raw):
+    cohort = config_simple_raw['Campus']['policy']['cohorts']['People'].copy()
+    config_simple_raw['Campus']['policy']['cohorts']['People2'] = cohort
+    config_simple_raw['Campus']['policy']['cohorts']['People']['fallback'] = [
+        'People2'
+    ]
+    validate_config(config_simple_raw)
+
+
+def test_validate_config_cohort_fallback_invalid_existence(config_simple_raw):
+    config_simple_raw['Campus']['policy']['cohorts']['People']['fallback'] = [
+        'People2'
+    ]
+    with pytest.raises(SchemaError):
+        validate_config(config_simple_raw)
+
+
+def test_validate_config_cohort_fallback_invalid_dupe(config_simple_raw):
+    cohort = config_simple_raw['Campus']['policy']['cohorts']['People'].copy()
+    config_simple_raw['Campus']['policy']['cohorts']['People2'] = cohort
+    config_simple_raw['Campus']['policy']['cohorts']['People']['fallback'] = [
+        'People2', 'People2'
+    ]
+    with pytest.raises(SchemaError):
+        validate_config(config_simple_raw)
+
+
 def test_validate_config_schedule_block_start_end_order(config_simple_raw):
     start = config_simple_raw['Campus']['policy']['blocks']['Block']['start']
     end = config_simple_raw['Campus']['policy']['blocks']['Block']['end']

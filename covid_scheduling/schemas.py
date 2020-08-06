@@ -47,15 +47,16 @@ CONFIG_SCHEMA = Schema(
                             ),
                             Optional('max'): And(
                                 Or(int, float),
-                                lambda x: x >= 0,
-                                error='Cohorts: maximum interval must be non-negative.'
+                                lambda x: x > 0,
+                                error='Cohorts: maximum interval must be positive.'
                             ),
                             'target': And(
                                 Or(int, float),
-                                lambda x: x >= 0,
-                                error='Cohorts: target interval must be non-negative.'
+                                lambda x: x > 0,
+                                error='Cohorts: target interval must be positive.'
                             )
-                        }
+                        },
+                        Optional('fallback'): [str]
                     }
                 },
                 Optional('bounds'): {
@@ -143,6 +144,7 @@ def validate_config(config: Dict) -> Dict:
     # Additional checks and conversions:
     #  * For any cohort interval: min <= target <= max
     #  * For any cohort interval: min is 0 if not specified
+    #  * For any cohort interval: fallback cohorts are unique and exist.
     #  * For any block: start <= end
     #  * For any site block: start <= end
     #  * For any site block: default weight is 1
@@ -163,6 +165,14 @@ def validate_config(config: Dict) -> Dict:
             if 'max' in interval and interval['max'] < interval['target']:
                 raise SchemaError('Cohorts: max interval cannot be less '
                                   'than target interval.')
+            if 'fallback' in cohort:
+                for fallback in cohort['fallback']:
+                    if fallback not in campus['policy']['cohorts']:
+                        raise SchemaError('Cohorts: fallback cohort '
+                                          f'"{fallback}" does not exist.')
+                if len(set(cohort['fallback'])) != len(cohort['fallback']):
+                    raise SchemaError('Cohorts: fallback cohorts must '
+                                      'be unique.')
 
         for block in campus['policy']['blocks'].values():
             block['start'] = ts_parse(block['start'])

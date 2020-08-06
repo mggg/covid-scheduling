@@ -28,7 +28,10 @@
                         "min": 1,
                         "target": 3.5,
                         "max": 5
-                    }
+                    },
+                    "fallback": [
+                        "Low-frequency staff"
+                    ]
                 },
                 "Low-frequency staff": {
                     "interval": {
