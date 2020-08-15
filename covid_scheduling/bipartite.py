@@ -4,6 +4,8 @@ from datetime import datetime
 import numpy as np  # type: ignore
 from ortools.linear_solver import pywraplp  # type: ignore
 from covid_scheduling.errors import AssignmentError
+from covid_scheduling.compatibility import (testing_compatibility_sets,
+                                            people_compatibility_sets)
 from covid_scheduling.load_balancing import site_weights
 
 
@@ -170,24 +172,8 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
             integers or `pywraplp.Solver.IntVar` objects).
             * The cost matrix corresponding to the assignment matrix.
     """
-    # Cache compatibility sets.
-    testing_blocks = {
-        idx: set((s['date'], s['block']) for s in sched)
-        for idx, sched in enumerate(schedules)
-    }
-    testing_sites = {
-        idx: set(s['site'] for s in sched)
-        for idx, sched in enumerate(schedules)
-    }
-    people_sites = [set(person['site_rank']) for person in people]
-    people_blocks = []
-    for person in people:
-        person_blocks = set()
-        for date, blocks in person['schedule'].items():
-            for b in blocks:
-                person_blocks.add((date, b))
-        people_blocks.append(person_blocks)
-
+    testing_blocks, testing_sites = testing_compatibility_sets(schedules)
+    people_blocks, people_sites = people_compatibility_sets(people)
     # Generate assignment and cost matrices.
     n_people = len(people)
     n_schedules = len(schedules)
@@ -196,18 +182,20 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
     for p_idx, person in enumerate(people):
         cohort = person['cohort']
         n_matches = 0
-        for schedule in schedules_by_cohort[cohort]:
-            s_idx = schedule['id']
-            if (len(schedule['blocks']) == test_demand[p_idx]
-                    and not testing_blocks[s_idx] - people_blocks[p_idx]
-                    and not testing_sites[s_idx] - people_sites[p_idx]):
-                assn = solver.IntVar(0, 1, f'assignments[{p_idx}, {s_idx}]')
-                assignments[p_idx][s_idx] = assn
-                target = (
-                    config['policy']['cohorts'][cohort]['interval']['target'])
-                costs[p_idx, s_idx] = cost_fn(schedule['blocks'], person,
-                                              target)
-                n_matches += 1
+        if cohort:
+            for schedule in schedules_by_cohort[cohort]:
+                s_idx = schedule['id']
+                if (len(schedule['blocks']) == test_demand[p_idx]
+                        and not testing_blocks[s_idx] - people_blocks[p_idx]
+                        and not testing_sites[s_idx] - people_sites[p_idx]):
+                    assn = solver.IntVar(0, 1,
+                                         f'assignments[{p_idx}, {s_idx}]')
+                    assignments[p_idx][s_idx] = assn
+                    target = (config['policy']['cohorts'][cohort]['interval']
+                              ['target'])
+                    costs[p_idx, s_idx] = cost_fn(schedule['blocks'], person,
+                                                  target)
+                    n_matches += 1
         # Constraint: each person has exactly one schedule assignment.
         if n_matches > 0:
             solver.Add(

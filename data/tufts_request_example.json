@@ -31,7 +31,10 @@
                             "min": 1,
                             "target": 3.5,
                             "max": 5
-                        }
+                        },
+                        "fallback": [
+                            "Low-frequency staff"
+                        ]
                     },
                     "Low-frequency staff": {
                         "interval": {
@@ -49,6 +52,10 @@
                     "block_load_tolerance": {
                         "min": 0.5,
                         "max": 1.5
+                    },
+                    "prefer_history": {
+                        "start": "2020-08-10",
+                        "end": "2020-08-16"
                     }
                 }
             },

@@ -7,7 +7,9 @@ from covid_scheduling.constants import DAYS
 from covid_scheduling.schedule import (schedule_blocks, cohort_schedules,
                                        add_sites_to_schedules, schedule_cost,
                                        schedule_ordering, cohort_tests,
-                                       format_assignments, MAX_TESTS)
+                                       cohort_fallback, format_assignments,
+                                       MAX_TESTS)
+from covid_scheduling.schemas import validate_people, validate_config
 # Avoid pytest conflicts.
 from covid_scheduling.schedule import testing_demand as demand_for_tests
 
@@ -343,3 +345,60 @@ def test_format_assignments_multiple_people(schedules_by_id_one_cohort,
         'assigned': True,
         'schedule': schedule
     } for person, schedule in zip(people, schedules_by_date)]
+
+
+def test_fallback_cohorts(config_simple_raw, people_simple_raw):
+    # Initialize two cohorts: one more restrictive, one less
+    # restrictive.
+    # TODO: the setup here is cumbersome and probably relies on
+    # too many functions. Refactor as new fixtures are added.
+    config_simple_raw['Campus']['policy']['cohorts'] = {
+        'hard': {
+            'interval': {
+                'min': 3,
+                'target': 3.5,
+                'max': 4
+            },
+            'fallback': ['easy']
+        },
+        'easy': {
+            'interval': {
+                'min': 1,
+                'target': 3.5,
+                'max': 6
+            }
+        }
+    }
+    config = validate_config(config_simple_raw)
+    campus_config = config['Campus']
+    person = people_simple_raw[0].copy()
+
+    # We expect that person_a will end up in the same cohort
+    # as person_b.
+    person_a = person.copy()
+    person_a['cohort'] = 'hard'
+    person_b = person.copy()
+    person_b['id'] = 'b'
+    person_b['cohort'] = 'easy'
+    people = validate_people([person_a, person_b], config)
+
+    blocks = schedule_blocks(campus_config, ts_parse('2020-01-01'),
+                             ts_parse('2020-01-07'))
+    schedules_by_cohort = {
+        c:
+        add_sites_to_schedules(cohort_schedules(campus_config, c, 2, blocks),
+                               campus_config)
+        for c in ('easy', 'hard')
+    }
+    schedules_by_id, schedules_by_cohort_with_id = schedule_ordering(
+        schedules_by_cohort)
+
+    fallback_people = cohort_fallback(campus_config, people, schedules_by_id,
+                                      schedules_by_cohort_with_id)
+    assert len(fallback_people) == 2
+    a_mod = [p for p in fallback_people if p['id'] == 'a'][0]
+    b_mod = [p for p in fallback_people if p['id'] == 'b'][0]
+    assert a_mod['cohort'] == 'easy'
+    a_mod['cohort'] = 'hard'
+    assert a_mod == people[0]
+    assert b_mod == people[1]

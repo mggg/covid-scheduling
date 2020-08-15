@@ -140,4 +140,4 @@ cython_debug/
 # Vim/macOS
 .DS_Store
 *.swp
-
+*.swo

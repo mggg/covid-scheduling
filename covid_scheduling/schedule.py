@@ -1,5 +1,5 @@
 """Campus block scheduling algorithms."""
-from typing import Dict, List, Tuple, Callable, Iterable
+from typing import Dict, List, Tuple, Callable, Iterable, Set
 from copy import deepcopy
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -9,6 +9,8 @@ from covid_scheduling.costs import schedule_cost
 from covid_scheduling.errors import AssignmentError
 from covid_scheduling.bipartite import bipartite_assign
 from covid_scheduling.constants import SEC_PER_DAY, MIDNIGHT
+from covid_scheduling.compatibility import (testing_compatibility_sets,
+                                            people_compatibility_sets)
 
 MAX_DAYS = 14
 MAX_TESTS = 2
@@ -96,7 +98,9 @@ def assign_schedules(config: Dict,
         }
         schedules, schedules_by_cohort = schedule_ordering(schedules_by_cohort)
         campus_people = [p for p in people if p['campus'] == campus]
-        demand = testing_demand(campus_config, campus_people, n_tests)
+        fallback_people = cohort_fallback(campus_config, campus_people,
+                                          schedules, schedules_by_cohort)
+        demand = testing_demand(campus_config, fallback_people, n_tests)
         try:
             assign_fn = ASSIGNMENT_METHODS[method]
         except ValueError:
@@ -104,7 +108,7 @@ def assign_schedules(config: Dict,
                                   'not available.')
 
         condensed, stats = assign_fn(config=campus_config,
-                                     people=campus_people,
+                                     people=fallback_people,
                                      start_date=start_date,
                                      end_date=end_date,
                                      schedules=schedules,
@@ -159,6 +163,55 @@ def format_assignments(people: List, schedules: List,
             assignment['schedule'] = dict(schedule_by_date)
         person_assignments.append(assignment)
     return person_assignments
+
+
+def cohort_fallback(config: Dict, people: List, schedules: List,
+                    schedules_by_cohort: Dict) -> List:
+    """Moves people into fallback cohorts if their cohorts are too restrictive.
+
+    For instance, a faculty member may fluctuate between testing twice a week
+    and once a week depending on their week-to-week schedules. A cohort can
+    provide a ranking of fallback cohorts; anyone who fails to meet the
+    schedule demands of their original cohort—-that is, they do not have
+    enough availability at the proper intervals---is placed in the highest-
+    ranked alternate cohort they are compatible with.
+
+    Even with this fallback scheme, a person may not be compatible with
+    *any* cohort. This is indicated by replacing the person's `cohort`
+    field with `None` rather than a fallback cohort.
+
+    Args:
+        config: The campus-level configuration.
+        people: The roster of people.
+
+    Returns:
+        A copy of the roster of people. Each person's `cohort` field may
+        be retained, replaced with a fallback cohort, or replaced with `None`.
+    """
+    testing_blocks, testing_sites = testing_compatibility_sets(schedules)
+    people_blocks, people_sites = people_compatibility_sets(people)
+    people = deepcopy(people)
+    for (person, person_blocks, person_sites) in zip(people, people_blocks,
+                                                     people_sites):
+        primary_cohort = person['cohort']
+        cohort_ranking = [primary_cohort]
+        cohort_ranking += (config['policy']['cohorts'][primary_cohort].get(
+            'fallback', []))
+        compatible = False
+        for cohort in cohort_ranking:
+            for schedule in schedules_by_cohort[cohort]:
+                s_idx = schedule['id']
+                if (not testing_blocks[s_idx] - person_blocks
+                        and not testing_sites[s_idx] - person_sites):
+                    compatible = True
+                    break
+            # As soon as we find a single compatible testing schedule
+            if compatible:
+                person['cohort'] = cohort
+                break
+        if not compatible:
+            person['cohort'] = None
+    return people
 
 
 def cohort_tests(config: Dict, n_days: int) -> Dict[str, int]:
