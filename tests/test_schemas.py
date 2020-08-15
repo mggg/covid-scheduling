@@ -118,12 +118,12 @@ def test_validate_config_datetime(config_simple):
         assert isinstance(block['end'], datetime)
 
 
-def test_validate_config_bounds(config_simple):
-    assert config_simple['policy']['bounds'] == {}
+def test_validate_config_params(config_simple):
+    assert config_simple['policy']['params'] == {}
 
 
-def test_validate_config_bounds_min_mult(config_simple_raw):
-    bounds = {
+def test_validate_config_params_min_mult(config_simple_raw):
+    params = {
         'day_load_tolerance': {
             'max': 1.25
         },
@@ -131,10 +131,27 @@ def test_validate_config_bounds_min_mult(config_simple_raw):
             'max': 1.25
         }
     }
-    config_simple_raw['Campus']['policy']['bounds'] = bounds
+    config_simple_raw['Campus']['policy']['params'] = params
     config = validate_config(config_simple_raw)
-    for key in bounds:
-        assert config['Campus']['policy']['bounds'][key]['min'] == 0
+    for key in params:
+        assert config['Campus']['policy']['params'][key]['min'] == 0
+
+
+def test_validate_config_bounds_mapped_to_params(config_simple_raw):
+    config_simple_raw['Campus']['policy']['params'] = {
+        'day_load_tolerance': {
+            'max': 1.25
+        }
+    }
+    config_simple_raw['Campus']['policy']['bounds'] = {
+        'block_load_tolerance': {
+            'max': 1.25
+        }
+    }
+    config = validate_config(config_simple_raw)
+    for k in ('block_load_tolerance', 'day_load_tolerance'):
+        assert k in config['Campus']['policy']['params']
+    assert 'bounds' not in config['Campus']['policy']
 
 
 def test_valiaate_people_baseline(people_simple_raw, config_simple_all):

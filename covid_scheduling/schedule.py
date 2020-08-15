@@ -346,7 +346,7 @@ def add_sites_to_schedules(schedules: List[Tuple], config: Dict) -> List[List]:
     this method produces are more user-friendly, as switching between testing
     sites in the same (short) time interval is annoying. However, we retain
     support for the latter. It can be enabled by setting `allow_site_splits` to
-    `True` in the configuration's `bounds` field.
+    `True` in the configuration's `params` field.
 
     In either case, we filter out infeasible schedules. If a schedule contains
     a block assigned to a site that is not actually open during that block,
@@ -363,7 +363,7 @@ def add_sites_to_schedules(schedules: List[Tuple], config: Dict) -> List[List]:
     site_schedules = []
     sites = config['sites'].keys()
     default_day = {'year': 2020, 'month': 9, 'day': 1}
-    allow_splits = config.get('bounds', {}).get('allow_site_splits', False)
+    allow_splits = config.get('params', {}).get('allow_site_splits', False)
     for schedule in schedules:
         if allow_splits:
             # 💥 Warning: allowing schedules with multiple appointments

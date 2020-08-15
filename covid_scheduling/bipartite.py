@@ -77,8 +77,8 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
         ]))
 
     # Add load-balancing constraints (optional).
-    if ('day_load_tolerance' in config['policy']['bounds']
-            or 'block_load_tolerance' in config['policy']['bounds']):
+    if ('day_load_tolerance' in config['policy']['params']
+            or 'block_load_tolerance' in config['policy']['params']):
         # Introduce an auxiliary vector to count schedule occurrences.
         schedule_counts = add_schedule_counts(solver, assignments)
         add_load_balancing(solver=solver,
@@ -242,7 +242,7 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
                        end_date: datetime) -> None:
     """Adds load balancing constraints (day- and/or block-level) to the MIP.
 
-    The `bounds` field in a campus configuration may contain a site-day load
+    The `params` field in a campus configuration may contain a site-day load
     balancing constraint in the `site_day_tolerance` field and a site-block
     load balancing cosntraint in the `site_block_tolerance` field.
 
@@ -293,13 +293,13 @@ def add_load_balancing(solver: pywraplp.Solver, config: Dict, people: List,
             solver.Add(demand <= max_load[time_idx])
 
     # Constraint: site-blocks are sufficiently load-balanced.
-    if 'block_load_tolerance' in config['policy']['bounds']:
-        bound = config['policy']['bounds']['block_load_tolerance']
+    if 'block_load_tolerance' in config['policy']['params']:
+        bound = config['policy']['params']['block_load_tolerance']
         site_time_constraint(bound['min'], bound['max'], use_days=False)
 
     # Constraint: site-days are sufficiently load-balanced.
-    if 'day_load_tolerance' in config['policy']['bounds']:
-        bound = config['policy']['bounds']['day_load_tolerance']
+    if 'day_load_tolerance' in config['policy']['params']:
+        bound = config['policy']['params']['day_load_tolerance']
         site_time_constraint(bound['min'], bound['max'], use_days=True)
 
 

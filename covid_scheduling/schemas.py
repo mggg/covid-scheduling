@@ -59,7 +59,8 @@ CONFIG_SCHEMA = Schema(
                         Optional('fallback'): [str]
                     }
                 },
-                Optional('bounds'): {
+                # `bounds` is deprecated; prefer `params`
+                Optional(Or('params', 'bounds')): {
                     Optional(Or('day_load_tolerance', 'block_load_tolerance')): {
                         Optional('min'): And(
                             Or(int, float),
@@ -150,8 +151,8 @@ def validate_config(config: Dict) -> Dict:
     #  * For any site block: default weight is 1
     #  * For any site: no overlapping blocks on a given day.
     #  * All times should be `datetime` objects.
-    #  * An empty `bounds` object if one does not already exist.
-    #  * Tolerance bounds have an implicit minimum multiplier of 0
+    #  * An empty `params` object if one does not already exist.
+    #  * Tolerance params have an implicit minimum multiplier of 0
     #    if not otherwise specified.
     for campus in config.values():
         for cohort in campus['policy']['cohorts'].values():
@@ -202,15 +203,21 @@ def validate_config(config: Dict) -> Dict:
                                           'within a day.')
                     max_time = block['end']
 
-        # Add a dummy bounds field if necessary.
-        campus['policy']['bounds'] = campus['policy'].get('bounds', {})
+        # Add a dummy params field if necessary.
+        # Map `bounds` (deprecated) to `params`.
+        campus['policy']['params'] = {
+            **campus['policy'].get('bounds', {}),
+            **campus['policy'].get('params', {})
+        }
+        if 'bounds' in campus['policy']:
+            del campus['policy']['bounds']
 
-        # Tolerance bounds have an in implicit minimum of 0 if
+        # Tolerance params have an in implicit minimum of 0 if
         # not otherwise specified.
         for bound in ('day_load_tolerance', 'block_load_tolerance'):
-            if bound in campus['policy']['bounds']:
-                bound_min = campus['policy']['bounds'][bound].get('min', 0)
-                campus['policy']['bounds'][bound]['min'] = bound_min
+            if bound in campus['policy']['params']:
+                bound_min = campus['policy']['params'][bound].get('min', 0)
+                campus['policy']['params'][bound]['min'] = bound_min
     return config
 
 

@@ -44,7 +44,7 @@
                         }
                     }
                 },
-                "bounds": {
+                "params": {
                     "day_load_tolerance": {
                         "min": 0.75,
                         "max": 1.25
