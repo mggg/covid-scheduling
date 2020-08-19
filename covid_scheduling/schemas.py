@@ -73,8 +73,9 @@ CONFIG_SCHEMA = Schema(
                             error='Bounds: maximum multiplier must be at least 1.'
                          )
                     },
-                    Optional('allow_site_splits'): bool
-                }
+                    Optional('allow_site_splits'): bool,
+                    Optional('repeat_history'): bool,
+                    Optional('fallback_matching'): bool
             },
             'sites': {
                 str: {
@@ -106,7 +107,8 @@ CONFIG_SCHEMA = Schema(
                 }
             }
         }
-    }, ignore_extra_keys=True)
+    }
+}, ignore_extra_keys=True)
 
 PEOPLE_SCHEMA = Schema([{
     'id': str,
@@ -218,6 +220,7 @@ def validate_config(config: Dict) -> Dict:
             if bound in campus['policy']['params']:
                 bound_min = campus['policy']['params'][bound].get('min', 0)
                 campus['policy']['params'][bound]['min'] = bound_min
+
     return config
 
 

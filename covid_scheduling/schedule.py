@@ -98,8 +98,29 @@ def assign_schedules(config: Dict,
         }
         schedules, schedules_by_cohort = schedule_ordering(schedules_by_cohort)
         campus_people = [p for p in people if p['campus'] == campus]
-        fallback_people = cohort_fallback(campus_config, campus_people,
-                                          schedules, schedules_by_cohort)
+
+        if campus_config['policy']['params'].get('repeat_history', False):
+            # Only schedule people who have not been scheduled
+            # or are no longer compatible with their last schedule.
+            new_people, old_people_with_schedules = repeat_schedules(
+                config=campus_config,
+                people=fallback_people,
+                start_date=start_date,
+                end_date=end_date,
+                n_tests=n_tests,
+                schedules=schedules,
+                schedules_by_cohort=schedules_by_cohort
+            )
+        else:
+            new_people = campus_people
+            old_people_with_schedules = []
+
+        # Assign people to fallback cohorts if necessary.
+        if campus_config['policy']['params'].get('fallback_matching', True):
+            fallback_people = cohort_fallback(campus_config, new_people,
+                                              schedules, schedules_by_cohort)
+        else:
+            fallback_people = new_people
         demand = testing_demand(campus_config, fallback_people, n_tests)
         try:
             assign_fn = ASSIGNMENT_METHODS[method]
@@ -399,6 +420,34 @@ def add_sites_to_schedules(schedules: List[Tuple], config: Dict) -> List[List]:
             if perm_valid:
                 site_schedules.append(augmented)
     return site_schedules
+
+
+def repeat_schedules(config: Dict,
+                     people: List,
+                     start_date: datetime,
+                     end_date: datetime,
+                     n_tests: Dict,
+                     schedules: List,
+                     schedules_by_cohort: Dict) -> Tuple[List, List]:
+    """Assigns people to their previous schedule where possible.
+
+    Each person may have a `history` field. If this field is present and
+    nonempty, we choose the 
+
+    Args:
+        config: The campus-level configuration.
+        people: The roster of people to calculate testing demand for.
+        start_date: The first day of testing. Only date information is used.
+        end_date: The last day of testing (inclusive).
+            Only date information is used.
+        n_tests: The number of tests demanded by each cohort for a chosen
+            time period. Each cohort should be assigned a positive
+            integer number of tests.
+        schedules: The list of testing schedules people may be assigned to.
+        schedules_by_cohort: A dictionary with cohort names as the keys and
+            lists of schedules as the values.
+    """
+    return people, []
 
 
 def schedule_ordering(schedules_by_cohort: Dict) -> Tuple[List, Dict]:

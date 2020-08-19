@@ -40,7 +40,7 @@
                         "interval": {
                             "min": 4,
                             "target": 7,
-                            "max": 10
+                           "max": 10
                         }
                     }
                 },
