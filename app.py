@@ -7,6 +7,8 @@ from covid_scheduling import (validate_people, validate_config,
                               assign_schedules, AssignmentError)
 from celery import Celery
 from celery.utils.log import get_task_logger
+from werkzeug.exceptions import default_exceptions
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
@@ -30,6 +32,25 @@ def make_celery(app):
     return celery
 
 
+@app.errorhandler(Exception)
+def handle_generic_error(error):
+    # https://stackoverflow.com/a/29332131
+    if isinstance(error, HTTPException):
+        code = error.code
+        error = str(error)
+        app.logger.error(f'HTTP error {code}: {error}')
+    else:
+        code = 500
+        error = 'Unknown internal error.'
+        app.logger.error(f'Internal error: {error}')
+    return jsonify(error=error), code
+
+
+# Enable JSON error handling. (see https://stackoverflow.com/a/29332131)
+for code in default_exceptions:
+    app.register_error_handler(code, handle_generic_error)
+
+# Set up backend for job-based API.
 app.config.update(CELERY_BROKER_URL=os.getenv('REDIS_URL', ''),
                   CELERY_RESULT_BACKEND=os.getenv('REDIS_URL', ''),
                   CELERY_TRACK_STARTED=True)
