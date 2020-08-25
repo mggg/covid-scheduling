@@ -104,21 +104,23 @@ def assign_schedules(config: Dict,
             # or are no longer compatible with their last schedule.
             new_people, old_people_with_schedules = repeat_schedules(
                 config=campus_config,
-                people=fallback_people,
+                people=campus_people,  #fallback_people,
                 start_date=start_date,
                 end_date=end_date,
                 n_tests=n_tests,
                 schedules=schedules,
-                schedules_by_cohort=schedules_by_cohort
-            )
+                schedules_by_cohort=schedules_by_cohort)
         else:
             new_people = campus_people
             old_people_with_schedules = []
 
         # Assign people to fallback cohorts if necessary.
         if campus_config['policy']['params'].get('fallback_matching', True):
-            fallback_people = cohort_fallback(campus_config, new_people,
-                                              schedules, schedules_by_cohort)
+            fallback_people = cohort_fallback(
+                config=campus_config,
+                people=new_people,
+                schedules=schedules,
+                schedules_by_cohort=schedules_by_cohort)
         else:
             fallback_people = new_people
         demand = testing_demand(campus_config, fallback_people, n_tests)
@@ -136,7 +138,8 @@ def assign_schedules(config: Dict,
                                      schedules_by_cohort=schedules_by_cohort,
                                      test_demand=demand,
                                      cost_fn=cost_fn)
-        assignments += format_assignments(people, schedules, condensed)
+        assignments += format_assignments(fallback_people, schedules,
+                                          condensed)
         all_stats += stats
     return assignments, all_stats
 
@@ -204,6 +207,9 @@ def cohort_fallback(config: Dict, people: List, schedules: List,
     Args:
         config: The campus-level configuration.
         people: The roster of people.
+        schedules: The list of testing schedules people may be assigned to.
+        schedules_by_cohort: A dictionary with cohort names as the keys and
+            lists of schedules as the values.
 
     Returns:
         A copy of the roster of people. Each person's `cohort` field may
@@ -226,7 +232,7 @@ def cohort_fallback(config: Dict, people: List, schedules: List,
                         and not testing_sites[s_idx] - person_sites):
                     compatible = True
                     break
-            # As soon as we find a single compatible testing schedule
+            # As soon as we find a single compatible testing schedule, stop.
             if compatible:
                 person['cohort'] = cohort
                 break
@@ -422,12 +428,8 @@ def add_sites_to_schedules(schedules: List[Tuple], config: Dict) -> List[List]:
     return site_schedules
 
 
-def repeat_schedules(config: Dict,
-                     people: List,
-                     start_date: datetime,
-                     end_date: datetime,
-                     n_tests: Dict,
-                     schedules: List,
+def repeat_schedules(config: Dict, people: List, start_date: datetime,
+                     end_date: datetime, n_tests: Dict, schedules: List,
                      schedules_by_cohort: Dict) -> Tuple[List, List]:
     """Assigns people to their previous schedule where possible.
 
@@ -513,5 +515,6 @@ def testing_demand(config: Dict, people: List, n_tests: Dict) -> np.ndarray:
     test_demand = np.zeros(n_people, dtype=np.int)
     for idx, person in enumerate(people):
         cohort_counts[person['cohort']] += 1
-        test_demand[idx] = n_tests[person['cohort']]
+        if person['cohort'] is not None:
+            test_demand[idx] = n_tests[person['cohort']]
     return test_demand

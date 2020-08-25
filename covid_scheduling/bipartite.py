@@ -8,6 +8,8 @@ from covid_scheduling.compatibility import (testing_compatibility_sets,
                                             people_compatibility_sets)
 from covid_scheduling.load_balancing import site_weights
 
+TIME_LIMIT_MS = 30 * 60 * 1000  # 30-minute time limit for MIP solver
+
 
 def bipartite_assign(config: Dict, people: List, start_date: datetime,
                      end_date: datetime, schedules: List,
@@ -90,6 +92,7 @@ def bipartite_assign(config: Dict, people: List, start_date: datetime,
                            start_date=start_date,
                            end_date=end_date)
 
+    solver.SetTimeLimit(TIME_LIMIT_MS)
     status = solver.Solve()
     if status == pywraplp.Solver.OPTIMAL:
         condensed = condense_assignments(people, schedules, assignments)

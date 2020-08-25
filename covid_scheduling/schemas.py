@@ -76,35 +76,35 @@ CONFIG_SCHEMA = Schema(
                     Optional('allow_site_splits'): bool,
                     Optional('repeat_history'): bool,
                     Optional('fallback_matching'): bool
-            },
-            'sites': {
-                str: {
-                    'n_lines': And(
-                        int,
-                        lambda x: x > 0,
-                        error='Sites: number of lines must be a positive integer.'
+            }
+        },
+        'sites': {
+            str: {
+                'n_lines': And(
+                    int,
+                    lambda x: x > 0,
+                    error='Sites: number of lines must be a positive integer.'
+                ),
+                'hours': [{
+                    'day': And(
+                        str,
+                        lambda s: s in DAYS,
+                        error='Site hours: day must be in ' + str(DAYS)
                     ),
-                    'hours': [{
-                        'day': And(
-                            str,
-                            lambda s: s in DAYS,
-                            error='Site hours: day must be in ' + str(DAYS)
-                        ),
-                        'start': Regex(
-                            HH_MM_SS_REGEX,
-                            error='Site hours: start time must be in HH:MM:SS format.'
-                        ),
-                        'end': Regex(
-                            HH_MM_SS_REGEX,
-                            error='Site hours: end time must be in HH:MM:SS format.'
-                        ),
-                        Optional('weight'): And(
-                            Or(int, float),
-                            lambda x: x > 0,
-                            error='Site hours: weight must be non-negative.'
-                        )
-                    }]
-                }
+                    'start': Regex(
+                        HH_MM_SS_REGEX,
+                        error='Site hours: start time must be in HH:MM:SS format.'
+                    ),
+                    'end': Regex(
+                        HH_MM_SS_REGEX,
+                        error='Site hours: end time must be in HH:MM:SS format.'
+                    ),
+                    Optional('weight'): And(
+                        Or(int, float),
+                        lambda x: x > 0,
+                        error='Site hours: weight must be non-negative.'
+                    )
+                }]
             }
         }
     }
