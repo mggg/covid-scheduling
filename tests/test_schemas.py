@@ -174,9 +174,9 @@ def test_validate_people_nonexistent_cohort(people_simple_raw,
 
 def test_validate_people_site_rank_nonexistent_site(people_simple_raw,
                                                     config_simple_all):
-    people_simple_raw[0]['site_rank'] = ['bad']
-    with pytest.raises(SchemaError):
-        validate_people(people_simple_raw, config_simple_all)
+    people_simple_raw[0]['site_rank'] = ['bad', 'Testing']
+    people = validate_people(people_simple_raw, config_simple_all)
+    assert people[0]['site_rank'] == ['Testing']
 
 
 def test_validate_people_site_rank_duplicate_site(people_simple_raw,
