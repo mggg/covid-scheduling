@@ -243,7 +243,6 @@ def validate_people(people: List, config: Dict) -> List:
     # Additional checks and conversions:
     # * `campus` must exist in the config.
     # * `cohort` must exist in the config (for `campus`).
-    # * All sites in `site_rank` must exist in the config.
     # * All sites in `site_rank` must be unique.
     # * All schedule blocks in `schedule` members must exist in the config.
     # * All schedule blocks in `schedule` members must be unique.
@@ -262,12 +261,12 @@ def validate_people(people: List, config: Dict) -> List:
 
         sites = campus_config['sites'].keys()
         ranks = person['site_rank']
-        for site in ranks:
-            if site not in sites:
-                raise SchemaError(f'People: site "{site}" does not exist in '
-                                  f'the configuration for campus "{campus}".')
         if len(set(ranks)) != len(ranks):
             raise SchemaError('People: sites in ranking must be unique.')
+
+        # Sites that do not exist in the configuration are ignored.
+        filtered_ranks = [s for s in person['site_rank'] if s in sites]
+        person['site_rank'] = filtered_ranks
 
         campus_blocks = campus_config['policy']['blocks'].keys()
         date_schedule = {}
