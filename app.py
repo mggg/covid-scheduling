@@ -10,6 +10,8 @@ from celery.utils.log import get_task_logger
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 
+DATE_FORMAT = '%Y-%m-%d'
+
 app = Flask(__name__)
 
 
@@ -86,7 +88,12 @@ def run_scheduler(self, body):
         task_logger.error('Unknown assignment error.', exc_info=True)
         self.update_state(state='FAILURE',
                           meta={'error': 'Unknown assignment error.'})
-    return {'people': assignments, 'stats': stats}
+    return {
+        'people': assignments,
+        'stats': stats,
+        'start_date': params['start_date'].strftime(DATE_FORMAT),
+        'end_date': params['end_date'].strftime(DATE_FORMAT)
+    }
 
 
 @app.route('/', methods=['POST'])
@@ -108,7 +115,12 @@ def schedule():
     except Exception as ex:
         app.logger.error('Unknown assignment error.', exc_info=True)
         raise InvalidUsage('Unknown assignment error.', 500)
-    return jsonify({'people': assignments, 'stats': stats})
+    return jsonify({
+        'people': assignments,
+        'stats': stats,
+        'start_date': params['start_date'].strftime(DATE_FORMAT),
+        'end_date': params['end_date'].strftime(DATE_FORMAT)
+    })
 
 
 @app.route('/jobs', methods=['POST'])
@@ -143,12 +155,12 @@ def parse_request(body):
         raise InvalidUsage("Expected a 'people' field.")
 
     try:
-        start_date = datetime.strptime(body.get('start', ''), '%Y-%m-%d')
+        start_date = datetime.strptime(body.get('start', ''), DATE_FORMAT)
     except (TypeError, ValueError):
         raise InvalidUsage("Expected a start date in field 'start' "
                            "with format YYYY-MM-DD.")
     try:
-        end_date = datetime.strptime(body.get('end', ''), '%Y-%m-%d')
+        end_date = datetime.strptime(body.get('end', ''), DATE_FORMAT)
     except (TypeError, ValueError):
         raise InvalidUsage("Expected a start date in field 'end' "
                            "with format YYYY-MM-DD.")
