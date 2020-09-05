@@ -6,6 +6,7 @@ from ortools.linear_solver import pywraplp  # type: ignore
 from covid_scheduling.errors import AssignmentError
 from covid_scheduling.compatibility import (testing_compatibility_sets,
                                             people_compatibility_sets)
+from covid_scheduling.history import history_blocks
 from covid_scheduling.load_balancing import site_weights
 
 TIME_LIMIT_MS = 30 * 60 * 1000  # 30-minute time limit for MIP solver
@@ -184,6 +185,12 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
     assignments = np.zeros((n_people, n_schedules), dtype=np.int).tolist()
     for p_idx, person in enumerate(people):
         cohort = person['cohort']
+        hist = history_blocks(config, person['history'])
+        if hist:
+            last_appointment = [hist[-1]]
+        else:
+            last_appointment = []
+
         n_matches = 0
         if cohort:
             for schedule in schedules_by_cohort[cohort]:
@@ -196,8 +203,8 @@ def add_assignments(solver: pywraplp.Solver, config: Dict, people: List,
                     assignments[p_idx][s_idx] = assn
                     target = (config['policy']['cohorts'][cohort]['interval']
                               ['target'])
-                    costs[p_idx, s_idx] = cost_fn(schedule['blocks'], person,
-                                                  target)
+                    costs[p_idx, s_idx] = cost_fn(
+                        last_appointment + schedule['blocks'], person, target)
                     n_matches += 1
         # Constraint: each person has exactly one schedule assignment.
         if n_matches > 0:

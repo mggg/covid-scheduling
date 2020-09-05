@@ -119,6 +119,18 @@ PEOPLE_SCHEMA = Schema([{
         {},
         error='People: schedule keys must be in YYYY-MM-DD format.'
     ),
+    Optional('history'): Or(
+        {
+            Regex(DATE_REGEX): [
+                {
+                    'site': str,
+                    'block': str
+                }
+            ]
+        },
+        {},
+        error='People: history keys must be in YYYY-MM-DD format.'
+    ),
     'site_rank': Or([str], []),
     Optional('last_test'): {
         'date': Regex(DATE_REGEX),
@@ -268,6 +280,7 @@ def validate_people(people: List, config: Dict) -> List:
         filtered_ranks = [s for s in person['site_rank'] if s in sites]
         person['site_rank'] = filtered_ranks
 
+        # All availabilities must map to existing blocks.
         campus_blocks = campus_config['policy']['blocks'].keys()
         date_schedule = {}
         for date, blocks in person['schedule'].items():
@@ -280,16 +293,28 @@ def validate_people(people: List, config: Dict) -> List:
                 raise SchemaError('People: all blocks must be unique for '
                                   'each day in a schedule.')
             date_schedule[ts_parse(date)] = blocks
-
-        if 'last_test' in person:
-            block = person['last_test']['block']
-            if block not in campus_blocks:
-                raise SchemaError(f'People: "{block}" does not exist in '
-                                  'the block schedule for campus'
-                                  f'"{campus}".')
-            ts = ts_parse(person['last_test']['date'])
-            person['last_test']['date'] = ts
         person['schedule'] = date_schedule
+
+        # Constraints on history are slightly loose: if an old appointment
+        # has a site that no longer exists, it is not filtered out, as it
+        # is still useful for determining the appropriate test spacing.
+        # However, if invalid blocks are specified, we throw an error---
+        # blocks should always be properly mapped by the caller.
+        date_history = {}
+        history_hashes = []
+        for date, appointments in person.get('history', {}).items():
+            for appointment in appointments:
+                block = appointment['block']
+                if block not in campus_blocks:
+                    raise SchemaError(f'People: block in history "{block}" '
+                                      'does not exist.')
+                history_hashes.append(
+                    (date, appointment['block'], appointment['site']))
+            date_history[ts_parse(date)] = appointments
+        if len(history_hashes) != len(set(history_hashes)):
+            raise SchemaError('People: appointments in history '
+                              'must be unique.')
+        person['history'] = date_history
 
     people_ids = set(p['id'] for p in people)
     if len(people_ids) != len(people):
