@@ -83,6 +83,14 @@ def assign_schedules(config: Dict,
             if start_date <= date < (end_date + timedelta(days=1))
         }
 
+    # Filter history to only include appointments before
+    # `start_date`.
+    for person in people:
+        person['history'] = {
+            date: blocks
+            for date, blocks in person['history'].items() if date < start_date
+        }
+
     # Generate assignments for each campus individually.
     assignments = []
     all_stats = []
